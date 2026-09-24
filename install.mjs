@@ -76,10 +76,10 @@ const launcherJs = join(SRC, "bin", "pilearn.js");
 let launcher;
 if (win) {
   launcher = join(BIN, "pilearn.cmd");
-  writeFileSync(launcher, `@echo off\r\nset "PILEARN_WORKSPACE=${WORKSPACE}"\r\nnode "${launcherJs}" %*\r\n`);
+  writeFileSync(launcher, `@echo off\r\nset "PILEARN_WORKSPACE=${WORKSPACE}"\r\nset "PI_CODING_AGENT_DIR=${AGENT}"\r\nnode "${launcherJs}" %*\r\n`);
 } else {
   launcher = join(BIN, "pilearn");
-  writeFileSync(launcher, `#!/bin/sh\nexport PILEARN_WORKSPACE="${WORKSPACE}"\nexec node "${launcherJs}" "$@"\n`);
+  writeFileSync(launcher, `#!/bin/sh\nexport PILEARN_WORKSPACE="${WORKSPACE}"\nexport PI_CODING_AGENT_DIR="${AGENT}"\nexec node "${launcherJs}" "$@"\n`);
   chmodSync(launcher, 0o755);
 }
 
