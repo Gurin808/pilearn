@@ -22,6 +22,10 @@ These rules hold in every answer to the learner at levels 1 and 2, inside `/stud
 
 A full session runs through `/study`, and the `pilearn-tutor` skill has its steps.
 
+## Writing
+
+Write plainly, for the learner and in every file. The `unslop` skill lists the patterns to avoid, like em dashes, filler, and inflated words.
+
 ## Math
 
 Write every formula as LaTeX, `$…$` inline and `$$…$$` on its own line, in chat and in files. The terminal renders these as math. Bare text like `A_i`, or math inside a code block, shows up raw.

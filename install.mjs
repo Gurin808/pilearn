@@ -51,9 +51,20 @@ for (const f of ["settings.json", "models.json", "auth.json", "keybindings.json"
   if (!existsSync(join(AGENT, f))) cpSync(join(SRC, "seeds", f), join(AGENT, f));
 }
 
+// 3b. PILearn loads only its own skills. Pi also picks up skills from the
+//     shared ~/.agents/skills folder (used by other agent tools); those would
+//     show up in PILearn but sit outside the folders the guard allows.
+const settingsPath = join(AGENT, "settings.json");
+const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+const NO_SHARED_SKILLS = "!**/.agents/skills/**";
+if (!(settings.skills ?? []).includes(NO_SHARED_SKILLS)) {
+  settings.skills = [...(settings.skills ?? []), NO_SHARED_SKILLS];
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+}
+
 // 4. Extension packages listed in settings.json, installed into PILearn's own
 //    package folder (<agent>/npm) so nothing depends on global npm packages.
-const packages = JSON.parse(readFileSync(join(AGENT, "settings.json"), "utf8")).packages ?? [];
+const packages = settings.packages ?? [];
 for (const pkg of packages) {
   const spec = String(typeof pkg === "string" ? pkg : pkg.source ?? "");
   if (!spec.startsWith("npm:")) continue;

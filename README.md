@@ -212,7 +212,7 @@ The only internet access is Wikipedia and Wikidata, for `/history`. The guard li
 
 Repo layout:
 
-- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `historical-context`, `eli5`, `session-search`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`), prompts, and templates.
+- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`), prompts, and templates.
 - `bin/pilearn.js` is the launcher.
 - `seeds/` has the first-install settings, models, auth, and keybindings, with no secrets.
 - `install.mjs` is the installer for all platforms. `install.sh` runs it on macOS and Linux.
@@ -220,4 +220,4 @@ Repo layout:
 
 ## License
 
-MIT, see `LICENSE`. Parts adapted from Feynman and pi-subagents, both MIT, are listed with their notices in `THIRD_PARTY_NOTICES.md`.
+MIT, see `LICENSE`. Parts adapted from Feynman, pi-subagents, and pstack, all MIT, are listed with their notices in `THIRD_PARTY_NOTICES.md`.

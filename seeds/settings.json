@@ -19,5 +19,8 @@
     "grep",
     "find",
     "ls"
+  ],
+  "skills": [
+    "!**/.agents/skills/**"
   ]
 }
