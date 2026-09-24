@@ -1,0 +1,20 @@
+{
+  "name": "pilearn",
+  "version": "0.1.0",
+  "description": "PILearn, an AI tutor for learning from books, built on the Pi agent core.",
+  "license": "MIT",
+  "type": "module",
+  "piConfig": {
+    "name": "pilearn",
+    "configDir": ".pilearn"
+  },
+  "bin": {
+    "pilearn": "bin/pilearn.js"
+  },
+  "scripts": {
+    "start": "node bin/pilearn.js"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.87.1"
+  }
+}

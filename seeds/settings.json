@@ -1,0 +1,23 @@
+{
+  "themes": [
+    "themes/pilearn.json"
+  ],
+  "packages": [
+    "npm:pi-subagents@0.40.0",
+    "npm:pi-btw@0.4.1",
+    "npm:pi-docparser@4.0.0"
+  ],
+  "quietStartup": true,
+  "collapseChangelog": true,
+  "defaultThinkingLevel": "medium",
+  "editorPaddingX": 1,
+  "theme": "pilearn",
+  "defaultTools": [
+    "read",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ]
+}
