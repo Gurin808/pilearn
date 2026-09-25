@@ -179,6 +179,66 @@ async function subdirs(dir: string): Promise<string[]> {
   }
 }
 
+type SectionNum = [number, number];
+
+function parseSection(text: string): SectionNum | undefined {
+  const m = text.trim().match(/^(\d+)\.(\d+)$/);
+  return m ? [Number(m[1]), Number(m[2])] : undefined;
+}
+
+function compareSections(a: SectionNum, b: SectionNum): number {
+  return a[0] - b[0] || a[1] - b[1];
+}
+
+/** Rows of the markdown table under `## <heading>`, as trimmed cell arrays (header and divider skipped). */
+function tableRows(markdown: string, heading: string): string[][] {
+  const start = markdown.search(new RegExp(`^##\\s+${heading}\\s*$`, "m"));
+  if (start < 0) return [];
+  const rows: string[][] = [];
+  for (const line of markdown.slice(start).split("\n").slice(1)) {
+    if (/^##\s/.test(line)) break;
+    if (!line.trim().startsWith("|")) continue;
+    const cells = line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+    if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
+    rows.push(cells);
+  }
+  return rows.slice(1);
+}
+
+/** Numbered sections (e.g. 1.1 … 1.10) from a digest's *Sections* table; `(intro)` rows are skipped. */
+function digestSections(digest: string): SectionNum[] {
+  return tableRows(digest, "Sections").flatMap((cells) => {
+    const s = parseSection(cells[0] ?? "");
+    return s ? [s] : [];
+  });
+}
+
+/**
+ * Sections covered by the *Sessions* table of `progress.md`. The Sections column holds
+ * entries like `1.1–1.4`, `1.9`, or `1.5-1.8, 2.1`; a bare `chNN` marks the whole chapter.
+ */
+function coveredSections(progress: string): { has: (s: SectionNum) => boolean; chapters: Set<string> } {
+  const ranges: [SectionNum, SectionNum][] = [];
+  const chapters = new Set<string>();
+  for (const cells of tableRows(progress, "Sessions")) {
+    for (const part of (cells[1] ?? "").split(/[,;]/)) {
+      const ch = part.trim().match(/^(ch\d+)$/i);
+      if (ch) {
+        chapters.add(ch[1]!.toLowerCase());
+        continue;
+      }
+      const [from, to = from] = part.split(/\s*[–—-]\s*/);
+      const a = parseSection(from ?? "");
+      const b = parseSection(to ?? "");
+      if (a && b) ranges.push([a, b]);
+    }
+  }
+  return {
+    has: (s) => ranges.some(([a, b]) => compareSections(a, s) <= 0 && compareSections(s, b) <= 0),
+    chapters,
+  };
+}
+
 async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
   const ws = workspaceDir();
   if (!existsSync(ws)) return null;
@@ -194,12 +254,20 @@ async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
     try {
       progress = await readFile(join(dir, "progress.md"), "utf8");
     } catch {}
-    const studied = new Set([...progress.matchAll(/^\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*([a-z0-9-]+)\s*\|/gm)].map((m) => m[1]));
-    const chapters = (await subdirs(join(dir, "chapters"))).map((ch) => ({
-      id: ch,
-      prepared: existsSync(join(dir, "chapters", ch, "digest.md")),
-      studied: studied.has(ch),
-    }));
+    const covered = coveredSections(progress);
+    const chapters: ChapterNode[] = [];
+    for (const ch of await subdirs(join(dir, "chapters"))) {
+      let digest: string | undefined;
+      try {
+        digest = await readFile(join(dir, "chapters", ch, "digest.md"), "utf8");
+      } catch {}
+      const sections = digest ? digestSections(digest) : [];
+      chapters.push({
+        id: ch,
+        prepared: digest !== undefined,
+        studied: covered.chapters.has(ch) || (sections.length > 0 && sections.every((s) => covered.has(s))),
+      });
+    }
     courses.push({ id, chapters });
   }
   return { root: formatHeaderPath(ws), courses, course, chapter };
