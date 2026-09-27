@@ -107,7 +107,7 @@ if (!onPath) {
 console.log(`
 Next steps:
   1. pilearn               start PILearn
-  2. /login                connect your model provider (e.g. a ChatGPT or Claude subscription, or an API key)
+  2. /login                connect your model provider (e.g. a ChatGPT subscription or an API key)
   3. /model                choose the chat model (saved as your default)
   4. /reader-model         choose the model that reads PDFs (needs image input)
-  5. /add-book <pdf>       add your first book`);
+  5. /add-course           add a book PDF, an OCW course download, or both`);

@@ -3,21 +3,21 @@
  *
  * Every file-touching tool call is checked before it runs:
  *   write/edit                       -> only inside the workspace
- *   read/grep/find/ls/document_*     -> the workspace, each course's source file
- *                                       (course.json `source`, usually outside via symlink),
+ *   read/grep/find/ls/document_*     -> the workspace, each course's linked books
+ *                                       (sources/*.pdf, symlinks to a library outside),
  *                                       PILearn's agent dir (skills, templates, past
  *                                       sessions) except credentials, and the temp dir
  *                                       where document_screenshot saves pages
  *   subagent cwd                     -> only inside the workspace
  * Paths are resolved through symlinks, so a link inside the workspace can't point
- * the model elsewhere, except at a course's own source.
+ * the model elsewhere, except at a course's own linked books.
  *
  * This guards the model's tools, not the Pi process: it is not an OS sandbox.
  * With `bash` disabled (settings.json defaultTools) the tools are the model's only
  * way to touch files. The learner's own `!command` shell is not affected.
  */
 
-import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, realpathSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 
@@ -54,6 +54,7 @@ function workspace(): string {
   return real(resolve(process.env.PILEARN_WORKSPACE || join(homedir(), "study")));
 }
 
+/** Books linked into a course (sources/*.pdf, or source.pdf from before sources existed), resolved to their real files. */
 function courseSources(ws: string): string[] {
   const out: string[] = [];
   let ids: string[] = [];
@@ -63,12 +64,18 @@ function courseSources(ws: string): string[] {
     return out;
   }
   for (const id of ids) {
-    try {
-      const course = JSON.parse(readFileSync(join(ws, "courses", id, "course.json"), "utf8"));
-      if (typeof course.source === "string") out.push(real(course.source));
-    } catch {}
+    const dir = join(ws, "courses", id);
+    for (const file of [join(dir, "source.pdf"), ...pdfs(join(dir, "sources"))]) if (existsSync(file)) out.push(real(file));
   }
   return out;
+}
+
+function pdfs(dir: string): string[] {
+  try {
+    return readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".pdf")).map((f) => join(dir, f));
+  } catch {
+    return [];
+  }
 }
 
 function expand(p: string, cwd: string): string {
@@ -85,7 +92,7 @@ function readAllowed(p: string, ws: string): boolean {
 }
 
 const OUTSIDE =
-  "PILearn only works with files inside the study workspace. To use a new book or paper, add it with /add-book, which links it into a course folder.";
+  "PILearn only works with files inside the study workspace. To use a new book or course, add it with /add-course, which links or copies it into a course folder.";
 
 export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {

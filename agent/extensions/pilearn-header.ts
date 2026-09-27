@@ -163,7 +163,7 @@ function detectSystemResources(): { cores: number; ramTotal: string } {
 }
 
 type ChapterNode = { id: string; prepared: boolean; studied: boolean };
-type CourseNode = { id: string; chapters: ChapterNode[] };
+type CourseNode = { id: string; title?: string; chapters: ChapterNode[] };
 type StudyTree = { root: string; courses: CourseNode[]; course?: string; chapter?: string };
 
 function workspaceDir(): string {
@@ -215,14 +215,14 @@ function digestSections(digest: string): SectionNum[] {
 
 /**
  * Sections covered by the *Sessions* table of `progress.md`. The Sections column holds
- * entries like `1.1–1.4`, `1.9`, or `1.5-1.8, 2.1`; a bare `chNN` marks the whole chapter.
+ * entries like `1.1–1.4`, `1.9`, or `1.5-1.8, 2.1`; a bare unit id like `ch03` or `ps3` marks the whole unit.
  */
 function coveredSections(progress: string): { has: (s: SectionNum) => boolean; chapters: Set<string> } {
   const ranges: [SectionNum, SectionNum][] = [];
   const chapters = new Set<string>();
   for (const cells of tableRows(progress, "Sessions")) {
     for (const part of (cells[1] ?? "").split(/[,;]/)) {
-      const ch = part.trim().match(/^(ch\d+)$/i);
+      const ch = part.trim().match(/^([a-z][a-z0-9-]*)$/i);
       if (ch) {
         chapters.add(ch[1]!.toLowerCase());
         continue;
@@ -268,7 +268,11 @@ async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
         studied: covered.chapters.has(ch) || (sections.length > 0 && sections.every((s) => covered.has(s))),
       });
     }
-    courses.push({ id, chapters });
+    let title: string | undefined;
+    try {
+      title = JSON.parse(await readFile(join(dir, "course.json"), "utf8")).title;
+    } catch {}
+    courses.push({ id, title, chapters });
   }
   return { root: formatHeaderPath(ws), courses, course, chapter };
 }
@@ -295,6 +299,7 @@ function renderStudyTree(tree: StudyTree, theme: Theme): TreeLine[] {
       `${name}${count}${isHere ? " ◀" : ""}`,
       (isHere ? here(name) : theme.fg("text", name)) + theme.fg("dim", count) + (isHere ? here(" ◀") : ""),
     );
+    if (course.title && course.title !== course.id) add(`│  ${lastCourse ? "   " : "│  "}`, course.title, theme.fg("dim", course.title));
     if (!isHere) return;
     course.chapters.forEach((ch, i) => {
       const branch = `│  ${lastCourse ? "   " : "│  "}${i === course.chapters.length - 1 ? "└─ " : "├─ "}`;

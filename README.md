@@ -1,6 +1,6 @@
 # PILearn
 
-PILearn is an AI tutor for learning from books. It runs on [Pi](https://github.com/earendil-works/pi), the agent core that Feynman also uses. The book is the ground truth. PILearn first condenses each chapter into a short digest. Then it runs study sessions with a pre-test, reading, recall in your own words, practice, and spaced review, and sends what you missed to Anki.
+PILearn is an AI tutor for learning from books and MIT OpenCourseWare courses. It runs on [Pi](https://github.com/earendil-works/pi), the agent core that Feynman also uses. The book is the ground truth. PILearn first condenses each chapter into a short digest. Then it runs study sessions with a pre-test, reading, recall in your own words, practice, and spaced review, and sends what you missed to Anki.
 
 The teaching follows research on how people learn: retrieval practice, pretesting, spacing, interleaving, trying before being told, and guided worked examples. The session steps are in `agent/skills/pilearn-tutor/SKILL.md`. The evidence behind each choice, and a log of every design decision, are in `docs/design-notes.md`.
 
@@ -89,7 +89,7 @@ Each block of sections gets a pre-test and a post-test with the same questions. 
 ## Requirements
 
 - macOS, Linux, or Windows, with Node.js 22.19 or newer
-- An account with a model provider Pi supports, such as a ChatGPT or Claude subscription or an API key. See *Models*.
+- An account with a model provider Pi supports, such as a ChatGPT subscription or an API key. A Claude subscription doesn't work, because Anthropic doesn't allow third-party tools like Pi to use it. Claude works through an Anthropic API key, billed by use. See *Models*.
 - Optional: [Anki](https://apps.ankiweb.net) with the AnkiConnect add-on, code `2055492159`, for flashcards
 
 ## Install
@@ -132,7 +132,7 @@ Then add `%USERPROFILE%\.pilearn\bin` to your `PATH`. Open Start, search "Edit e
 
 ### Windows notes
 
-Use [Windows Terminal](https://aka.ms/terminal) so colors and math symbols display correctly. Windows allows symbolic links only in Developer Mode, so without it `/add-book` links the PDF with a hard link, or copies it if the book is on another drive. You can also run PILearn inside WSL and follow the Linux steps.
+Use [Windows Terminal](https://aka.ms/terminal) so colors and math symbols display correctly. Windows allows symbolic links only in Developer Mode, so without it `/add-course` links the PDF with a hard link, or copies it if the book is on another drive. You can also run PILearn inside WSL and follow the Linux steps.
 
 Windows support is new and hasn't been tested on a Windows machine yet. Please open an issue if something breaks.
 
@@ -148,7 +148,7 @@ You can run the installer again at any time, and should after pulling updates. I
 
 The installer asks you to do this once, inside PILearn:
 
-1. `/login` connects your provider, by subscription or API key. Pi stores the credentials on your machine in `~/.pilearn/agent/auth.json`.
+1. `/login` connects your provider, by subscription (ChatGPT) or API key (for example Anthropic for Claude). Pi stores the credentials on your machine in `~/.pilearn/agent/auth.json`.
 2. `/model` picks the chat model and saves it as your default.
 3. `/reader-model` picks the model that reads your PDFs. Math is read from images of the pages, so the list only shows models that accept images. If you don't pick one, the chat model reads the PDFs.
 
@@ -176,11 +176,13 @@ Keep credentials in `auth.json` or environment variables, never in this repo.
 
 ```
 pilearn                    # starts at level 1 (~/study)
-/add-book <path-to-pdf>    # new course; finds chapters and page offset, asks you when unsure
+/add-course                # add a book PDF, an OCW course download, or both
 /prep <course>             # chapter-readers write each chapter's digest
 /go                        # pick a course with the arrow keys; PILearn restarts there
 /reader-model              # choose the model that reads PDFs
 ```
+
+`/add-course` takes book PDFs as local paths and links them, so your library keeps the only copy. For an OCW course, use "Download course" on its page on ocw.mit.edu, unzip it, and give PILearn the folder. PILearn copies the course's PDFs (notes, problem sets, exams, solutions, transcripts) into the course and turns its syllabus, calendar, and reading list into Markdown, so you can delete the download afterwards. With both a book and an OCW course, say which one sets the order. PILearn checks whether the course uses your edition of the book, proposes units and a session plan, and waits for your approval before it creates anything.
 
 Inside a course, at level 2:
 
@@ -205,14 +207,14 @@ Each level has an `AGENTS.md` that tells the model its role. Each level reads on
 PILearn stays inside your study folder. It teaches from your book and its own training, and cites printed page numbers so you can check any claim. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
 
 - Writing is allowed only inside the workspace, `~/study`.
-- Reading is allowed in the workspace, in each course's source file, which usually lives elsewhere and is linked in, and in PILearn's config except the files that hold credentials.
+- Reading is allowed in the workspace, in each course's linked books, which live elsewhere, and in PILearn's config except the files that hold credentials.
 - Subagents can only start inside the workspace.
 
 The only internet access is Wikipedia and Wikidata, for `/history`. The guard limits what the model's tools can do. It is not an operating-system sandbox, and your own `!command` shell in PILearn works as usual.
 
 Repo layout:
 
-- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`), prompts, and templates.
+- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `add-course`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`), prompts, and templates.
 - `bin/pilearn.js` is the launcher.
 - `seeds/` has the first-install settings, models, auth, and keybindings, with no secrets.
 - `install.mjs` is the installer for all platforms. `install.sh` runs it on macOS and Linux.
