@@ -176,13 +176,14 @@ Keep credentials in `auth.json` or environment variables, never in this repo.
 
 ```
 pilearn                    # starts at level 1 (~/study)
-/add-course                # add a book PDF, an OCW course download, or both
+/add-course                # add books, an OCW course download, video lectures, or any folder of course materials
+!pilearn videos <links> --out <folder>   # turn YouTube lectures into transcripts for /add-course (needs yt-dlp)
 /prep <course>             # chapter-readers write each chapter's digest
 /go                        # pick a course with the arrow keys; PILearn restarts there
 /reader-model              # choose the model that reads PDFs
 ```
 
-`/add-course` takes book PDFs as local paths and links them, so your library keeps the only copy. For an OCW course, use "Download course" on its page on ocw.mit.edu, unzip it, and give PILearn the folder. PILearn copies the course's PDFs (notes, problem sets, exams, solutions, transcripts) into the course and turns its syllabus, calendar, and reading list into Markdown, so you can delete the download afterwards. With both a book and an OCW course, say which one sets the order. PILearn checks whether the course uses your edition of the book, proposes units and a session plan, and waits for your approval before it creates anything.
+`/add-course` takes book PDFs as local paths and links them, so your library keeps the only copy. For an OCW course, use "Download course" on its page on ocw.mit.edu, unzip it, and give PILearn the folder. PILearn copies the course's PDFs (notes, problem sets, exams, solutions, transcripts) into the course and turns its syllabus, calendar, and reading list into Markdown, so you can delete the download afterwards. Lectures from YouTube work too. `pilearn videos` takes a playlist or video links, downloads the captions with [yt-dlp](https://github.com/yt-dlp/yt-dlp), preferring captions made by the uploader over automatic ones, and writes one transcript per lecture with timestamps. You run it yourself, for example as `!pilearn videos …` inside PILearn, so the model never goes online. Any other folder of course materials, such as lecture notes and problem sheets from a course website, can be added the same way: PILearn copies it into the course and works out what each file is. With a book and a course, say which one sets the order. PILearn checks whether the course uses your edition of the book, proposes units and a session plan, and waits for your approval before it creates anything.
 
 Inside a course, at level 2:
 

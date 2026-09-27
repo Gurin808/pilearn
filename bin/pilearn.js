@@ -30,6 +30,11 @@ function resolveWorkDir() {
 }
 
 const args = process.argv.slice(2);
+if (args[0] === "videos") {
+  const { main } = await import("./pilearn-videos.js");
+  main(args.slice(1));
+  process.exit(0);
+}
 let courseName = null;
 const passthrough = [];
 let printContext = false;

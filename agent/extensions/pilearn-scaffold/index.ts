@@ -8,8 +8,8 @@
  * OCW PDFs are copied into the course folder, so the download can be deleted.
  */
 
-import { copyFile, link, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
-import { existsSync, lstatSync, realpathSync } from "node:fs";
+import { copyFile, link, mkdir, readdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { existsSync, lstatSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
@@ -28,7 +28,12 @@ const Part = Type.Object({
   source: Type.String({
     description: "Source id from course.json, e.g. book, or the path of a PDF under ocw/files/, which is then added as a source with pageOffset 0",
   }),
-  pages: Type.String({ description: "Page range as the source numbers its pages, e.g. 41-67. For a source with pageOffset 0 these are PDF pages." }),
+  pages: Type.Optional(
+    Type.String({
+      description:
+        "Page range as the source numbers its pages, e.g. 41-67. For a source with pageOffset 0 these are PDF pages. Required for a PDF; leave it out for a transcript or text file, which is read whole.",
+    }),
+  ),
   role: Type.Optional(
     StringEnum(["reading", "exercises", "solutions"] as const, {
       description:
@@ -44,9 +49,9 @@ const Part = Type.Object({
 });
 
 const Params = Type.Object({
-  level: StringEnum(["course", "source", "ocw", "chapter"] as const, {
+  level: StringEnum(["course", "source", "ocw", "folder", "chapter"] as const, {
     description:
-      "course: create a course or update its title and practice. source: add a PDF to a course, or update a source's title, pageOffset, or solutions. ocw: import an unpacked OCW course download into a course. chapter: create one unit folder.",
+      "course: create a course or update its title and practice. source: add a PDF to a course, or update a source's title, pageOffset, or solutions. ocw: import an unpacked OCW course download into a course. folder: copy any other folder of course materials (PDFs, transcripts from `pilearn videos`, text) into the course. chapter: create one unit folder.",
   }),
   course: Type.String({ description: "Course id: short, lowercase, hyphenated (e.g. bookofproof)" }),
   title: Type.Optional(Type.String({ description: "Title of the course, source, or unit, depending on the level" })),
@@ -56,11 +61,11 @@ const Params = Type.Object({
         "Level course: how much practice by hand this subject needs. foundational means fluency matters and gets more exercises; conceptual means getting the idea is enough and gets a few. Ask the learner.",
     }),
   ),
-  source: Type.Optional(Type.String({ description: "Level source: the source id, short and lowercase, e.g. book, notes-m, ps3" })),
+  source: Type.Optional(Type.String({ description: "Level source: the source id, short and lowercase, e.g. book, notes-m, ps3. Level folder: an id for the folder, e.g. simon-lectures" })),
   path: Type.Optional(
     Type.String({
       description:
-        "Level source, first call for that id: a local PDF path or file URL (linked, not copied), or a PDF already in the course folder such as ocw/files/ps3.pdf. Level ocw: the unpacked OCW download folder.",
+        "Level source, first call for that id: a local PDF path or file URL (linked, not copied), or a file already in the course folder such as ocw/files/ps3.pdf or materials/<id>/video01.md. Level ocw: the unpacked OCW download folder. Level folder: the local folder to copy in.",
     }),
   ),
   pageOffset: Type.Optional(
@@ -80,13 +85,14 @@ const Params = Type.Object({
 });
 
 /** file is relative to the course folder. origin is the real file a linked book points to. */
-type Source = { title: string; file: string; origin?: string; pageOffset?: number; solutions?: string };
+type Source = { title: string; file: string; origin?: string; pageOffset?: number; solutions?: string; text?: boolean };
 type Course = {
   id: string;
   title: string;
   practice?: string;
   sources: Record<string, Source>;
   ocw?: { number: string; title: string; term: string; url: string; origin: string };
+  folders?: Record<string, { origin: string }>;
 };
 
 function workspace(): string {
@@ -175,7 +181,30 @@ async function saveCourse(dir: string, course: Course) {
 }
 
 function describeSource(id: string, s: Source): string {
+  if (s.text) return `${id} (${s.file}, a text file read whole)`;
   return `${id} (${s.file}, pageOffset ${s.pageOffset ?? "not set"}, solutions ${s.solutions ?? "not set"})`;
+}
+
+const TEXT = /\.(md|txt)$/i;
+const MATERIAL = /\.(pdf|md|txt|json)$/i;
+
+/** A file or folder name that is safe in a path and easy to type. */
+function safeName(name: string): string {
+  const ext = extname(name);
+  const clean = (part: string) => part.normalize("NFKD").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return (clean(name.slice(0, name.length - ext.length)) || "file") + clean(ext);
+}
+
+/** Every PDF, text, and JSON file under a folder, skipping hidden files, as paths relative to it. */
+async function materialFiles(root: string, rel = ""): Promise<string[]> {
+  const out: string[] = [];
+  for (const e of await readdir(join(root, rel), { withFileTypes: true })) {
+    if (e.name.startsWith(".")) continue;
+    const path = rel ? join(rel, e.name) : e.name;
+    if (e.isDirectory()) out.push(...(await materialFiles(root, path)));
+    else if (MATERIAL.test(e.name)) out.push(path);
+  }
+  return out;
 }
 
 export default function (pi: ExtensionAPI) {
@@ -187,7 +216,8 @@ export default function (pi: ExtensionAPI) {
       "Level course creates the course folder (level 2) with AGENTS.md, progress.md, and course.json, or updates its title and practice. " +
       "Level source adds one PDF to the course's sources under an id: a book outside the workspace is linked as sources/<id>.pdf, a PDF already in the course folder is used where it is. A repeat call updates title, pageOffset, or solutions. " +
       "Level ocw copies every PDF of an unpacked OCW course download into ocw/files/, writes its pages as Markdown to ocw/pages/, and writes ocw/index.md. " +
-      "Level chapter creates one unit folder (level 3) whose AGENTS.md lists its parts, each a page range of one source, converted to PDF pages with that source's pageOffset. " +
+      "Level folder copies another folder of course materials into materials/<id>/, keeping its structure, for you to explore with ls, find, and read. " +
+      "Level chapter creates one unit folder (level 3) whose AGENTS.md lists its parts, each a page range of one source, converted to PDF pages with that source's pageOffset, or a whole transcript or text file. " +
       "The tool never overwrites an existing AGENTS.md.",
     parameters: Params,
 
@@ -240,7 +270,9 @@ export default function (pi: ExtensionAPI) {
           const raw = params.path.startsWith("file://") ? fileURLToPath(params.path) : expandHome(params.path);
           const path = isAbsolute(raw) ? raw : resolve(courseDir, raw);
           if (!existsSync(path)) throw new Error(`File not found: ${path}`);
-          if (extname(path).toLowerCase() !== ".pdf") throw new Error(`${path} isn't a PDF. PILearn reads PDF sources only.`);
+          const text = TEXT.test(path);
+          if (text && !inside(path, courseDir)) throw new Error(`${path} is a text file outside the course. Copy its folder in with level "folder" first.`);
+          if (!text && extname(path).toLowerCase() !== ".pdf") throw new Error(`${path} isn't a PDF or a transcript. PILearn reads PDFs, and Markdown or text files inside the course.`);
           let file: string;
           let origin: string | undefined;
           if (inside(path, courseDir)) {
@@ -256,14 +288,14 @@ export default function (pi: ExtensionAPI) {
           }
           const taken = Object.entries(existing.sources).find(([, s]) => s.file === file);
           if (taken) throw new Error(`${file} is already source ${taken[0]}.`);
-          entry = { title: basename(path, extname(path)), file, ...(origin ? { origin } : {}) };
+          entry = { title: basename(path, extname(path)), file, ...(origin ? { origin } : {}), ...(text ? { text: true } : {}) };
         }
         if (params.title) entry.title = params.title;
         if (params.pageOffset !== undefined) entry.pageOffset = params.pageOffset;
         if (params.solutions) entry.solutions = params.solutions;
         const updated: Course = { ...existing, sources: { ...existing.sources, [id]: entry } };
         await saveCourse(courseDir, updated);
-        const next = entry.pageOffset === undefined ? " Next: set pageOffset (0 if the PDF has no printed page numbers)." : "";
+        const next = !entry.text && entry.pageOffset === undefined ? " Next: set pageOffset (0 if the PDF has no printed page numbers)." : "";
         return result(`${current ? "Updated" : "Added"} source ${describeSource(id, entry)}.${note}${next}`);
       }
 
@@ -299,26 +331,78 @@ export default function (pi: ExtensionAPI) {
         );
       }
 
+      if (params.level === "folder") {
+        const fid = params.source?.trim().toLowerCase();
+        if (!fid || !ID.test(fid)) throw new Error("Level folder needs a `source` id for the folder: short, lowercase, hyphenated (e.g. simon-lectures).");
+        if (!params.path) throw new Error("Level folder needs `path`: the local folder to copy in.");
+        const raw = params.path.startsWith("file://") ? fileURLToPath(params.path) : expandHome(params.path);
+        const from = isAbsolute(raw) ? raw : resolve(raw);
+        if (/\.zip$/i.test(from)) throw new Error("This is a zip file. Unzip it first and give the folder.");
+        if (!existsSync(from) || !statSync(from).isDirectory()) throw new Error(`Folder not found: ${from}`);
+        if (inside(realpathSync(from), realpathSync(workspace()))) throw new Error(`${from} is already in the workspace.`);
+        const prior = existing.folders?.[fid];
+        if (prior && prior.origin !== realpathSync(from)) throw new Error(`Folder id ${fid} already holds ${prior.origin}. Choose another id.`);
+        const dest = join(courseDir, "materials", fid);
+        let copied = 0;
+        const files = await materialFiles(from);
+        for (const rel of files) {
+          const target = join(dest, ...rel.split(/[\\/]/).map(safeName));
+          if (exists(target)) continue;
+          await mkdir(join(target, ".."), { recursive: true });
+          await copyFile(join(from, rel), target);
+          copied++;
+        }
+        // Titles for transcripts made by `pilearn videos`, so sources get readable names.
+        let titles: Record<string, { title: string; url?: string }> = {};
+        try {
+          const made = JSON.parse(await readFile(join(from, "pilearn-videos.json"), "utf8"));
+          titles = Object.fromEntries((made.videos ?? []).filter((v: any) => v.file).map((v: any) => [v.file.replace(TEXT, ""), { title: v.title, url: v.url }]));
+        } catch {}
+        await writeFile(join(dest, "files.json"), JSON.stringify(titles, null, 2) + "\n");
+        const updated: Course = { ...existing, folders: { ...existing.folders, [fid]: { origin: realpathSync(from) } } };
+        await saveCourse(courseDir, updated);
+        const pdfs = files.filter((f) => /\.pdf$/i.test(f)).length;
+        const texts = files.filter((f) => TEXT.test(f)).length;
+        const index = existsSync(join(dest, "index.md")) ? ` Start with materials/${fid}/index.md.` : "";
+        return result(
+          `Copied ${from} to materials/${fid}/ (${copied} newly copied): ${pdfs} PDFs and ${texts} Markdown or text files, with the folder structure kept. Explore it with ls, find, read, and document_parse.${index} A unit part can name any of these files by its path.`,
+        );
+      }
+
       // level chapter
       const id = params.chapter ? chapterId(params.chapter) : null;
       if (!id) throw new Error("Level chapter needs a valid `chapter` (e.g. 3, 03, appendix-a, ps3).");
       if (!params.title) throw new Error("Level chapter needs `title`.");
-      // A part can name an OCW file by path. Add it as a source under its file name, with pageOffset 0.
-      let ocwTitles: Record<string, { title: string }> = {};
-      try {
-        ocwTitles = JSON.parse(await readFile(join(courseDir, "ocw", "files.json"), "utf8"));
-      } catch {}
+      // A part can name a file under ocw/files/ or materials/<id>/ by path. Add it as a source,
+      // a PDF with pageOffset 0 or a text file read whole, under an id made from its name.
+      const titleCache: Record<string, Record<string, { title: string }>> = {};
+      const titlesFor = async (dir: string) => {
+        if (!(dir in titleCache)) {
+          try {
+            titleCache[dir] = JSON.parse(await readFile(join(courseDir, dir, "files.json"), "utf8"));
+          } catch {
+            titleCache[dir] = {};
+          }
+        }
+        return titleCache[dir]!;
+      };
       let added = false;
       for (const part of params.parts ?? []) {
-        const m = part.source.trim().match(/^(?:\.\/)?ocw\/files\/([a-z0-9_-]+)\.pdf$/i);
-        if (!m || existing.sources[part.source]) continue;
-        const file = join("ocw", "files", `${m[1]}.pdf`);
-        if (!existsSync(join(courseDir, file))) throw new Error(`${file} doesn't exist. Check the path in ocw/index.md.`);
+        const path = part.source.trim().replace(/^\.\//, "");
+        if (existing.sources[path]) continue;
+        const ocw = path.match(/^ocw\/files\/([a-z0-9_-]+)\.pdf$/i);
+        const material = path.match(/^materials\/([a-z0-9-]+)\/(.+)\.(pdf|md|txt)$/i);
+        if (!ocw && !material) continue;
+        const file = join(...path.split("/"));
+        if (!existsSync(join(courseDir, file))) throw new Error(`${path} doesn't exist in the course. Check the path with ls or the index.`);
         const known = Object.entries(existing.sources).find(([, s]) => s.file === file)?.[0];
-        const id = known ?? m[1]!.toLowerCase().replaceAll("_", "-");
+        const name = ocw ? ocw[1]! : material![2]!;
+        const id = known ?? (ocw ? name : `${material![1]}-${basename(name)}`).toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/-$/, "");
         if (!known) {
-          if (existing.sources[id]) throw new Error(`Source id ${id} is taken by another file. Add ${file} with level "source" and a new id.`);
-          existing.sources[id] = { title: ocwTitles[m[1]!]?.title ?? m[1]!, file, pageOffset: 0 };
+          if (existing.sources[id]) throw new Error(`Source id ${id} is taken by another file. Add ${path} with level "source" and a new id.`);
+          const titles = await titlesFor(ocw ? "ocw" : join("materials", material![1]!));
+          const title = titles[name]?.title ?? basename(name);
+          existing.sources[id] = TEXT.test(path) ? { title, file, text: true } : { title, file, pageOffset: 0 };
           added = true;
         }
         part.source = id;
@@ -338,6 +422,23 @@ export default function (pi: ExtensionAPI) {
       for (const part of parts) {
         const source = existing.sources[part.source];
         if (!source) throw new Error(`Unknown source "${part.source}". Sources of ${params.course}: ${ids.join(", ") || "none yet"}.`);
+        const role = part.role ?? "reading";
+        const note = part.note
+          ?.trim()
+          .replace(/[.\s]+$/, "")
+          .replace(/^only\s+/i, "")
+          .replace(/\s+only$/i, "");
+        const only = note ? ` Only ${note}.` : "";
+        const file = `\`${join(courseDir, source.file)}\``;
+        if (source.text) {
+          const whole = `the whole file`;
+          if (role === "reading") lines.push(`- Read ${file} (source \`${part.source}\`, ${source.title}), ${whole}.${only}`);
+          else if (role === "exercises") lines.push(`- List the exercises in ${file} (source \`${part.source}\`, ${source.title}), ${whole}.${only} Don't solve them.`);
+          else lines.push(`- Solutions are in ${file} (source \`${part.source}\`, ${source.title}). They are for the tutor. Don't read them.`);
+          summary.push(`${role} ${part.source} whole file${note ? ` (only ${note})` : ""}`);
+          continue;
+        }
+        if (!part.pages) throw new Error(`Part ${part.source} needs \`pages\`: it's a PDF.`);
         if (source.pageOffset === undefined)
           throw new Error(`Source ${part.source} has no pageOffset yet: set it with level "source" (0 if its PDF has no printed page numbers).`);
         const m = part.pages.trim().match(PAGES);
@@ -347,14 +448,6 @@ export default function (pi: ExtensionAPI) {
         if (first + source.pageOffset < 1) throw new Error(`Pages ${part.pages} of ${part.source} fall before PDF page 1.`);
         const pdf = `${first + source.pageOffset}-${last + source.pageOffset}`;
         const where = source.pageOffset === 0 ? `PDF pages ${pdf}` : `pages ${first}-${last}, which are PDF pages ${pdf}`;
-        const file = `\`${join(courseDir, source.file)}\``;
-        const role = part.role ?? "reading";
-        const note = part.note
-          ?.trim()
-          .replace(/[.\s]+$/, "")
-          .replace(/^only\s+/i, "")
-          .replace(/\s+only$/i, "");
-        const only = note ? ` Only ${note}.` : "";
         if (role === "reading") lines.push(`- Read ${file} (source \`${part.source}\`, ${source.title}), ${where}.${only}`);
         else if (role === "exercises") lines.push(`- List the exercises in ${file} (source \`${part.source}\`, ${source.title}), ${where}.${only} Don't solve them.`);
         else lines.push(`- Solutions are in ${file} (source \`${part.source}\`, ${source.title}), ${where}.${only} They are for the tutor. Don't read them.`);
@@ -364,12 +457,15 @@ export default function (pi: ExtensionAPI) {
       }
       const cited = parts.filter((p) => p.role !== "solutions");
       const several = new Set(cited.map((p) => p.source)).size > 1;
-      const pdfOnly = cited.some((p) => existing.sources[p.source]!.pageOffset === 0);
-      const printed = cited.some((p) => existing.sources[p.source]!.pageOffset !== 0);
+      const kind = (p: { source: string }) => existing.sources[p.source]!;
+      const pdfOnly = cited.some((p) => !kind(p).text && kind(p).pageOffset === 0);
+      const printed = cited.some((p) => !kind(p).text && kind(p).pageOffset !== 0);
+      const transcript = cited.some((p) => kind(p).text);
       const cite = [
         several ? "This unit uses more than one source, so cite pages with the source id, like `book p. 45` or `ps3 p. 2`." : "",
         pdfOnly ? "Cite a range given only in PDF pages by its PDF pages, even where a page prints its own number." : "",
         printed ? "Cite a range given in the source's own pages by those pages." : "",
+        transcript ? "Cite a transcript by its timestamps, like `[12:40]`." : "",
       ]
         .filter(Boolean)
         .join(" ");
