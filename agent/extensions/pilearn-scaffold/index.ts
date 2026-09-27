@@ -375,7 +375,7 @@ export default function (pi: ExtensionAPI) {
       if (!params.title) throw new Error("Level chapter needs `title`.");
       // A part can name a file under ocw/files/ or materials/<id>/ by path. Add it as a source,
       // a PDF with pageOffset 0 or a text file read whole, under an id made from its name.
-      const titleCache: Record<string, Record<string, { title: string }>> = {};
+      const titleCache: Record<string, Record<string, { title: string; kind?: string }>> = {};
       const titlesFor = async (dir: string) => {
         if (!(dir in titleCache)) {
           try {
@@ -397,15 +397,24 @@ export default function (pi: ExtensionAPI) {
         if (!existsSync(join(courseDir, file))) throw new Error(`${path} doesn't exist in the course. Check the path with ls or the index.`);
         const known = Object.entries(existing.sources).find(([, s]) => s.file === file)?.[0];
         const name = ocw ? ocw[1]! : material![2]!;
-        const id = known ?? (ocw ? name : `${material![1]}-${basename(name)}`).toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/-$/, "");
-        if (!known) {
-          if (existing.sources[id]) throw new Error(`Source id ${id} is taken by another file. Add ${path} with level "source" and a new id.`);
+        let sid = known;
+        if (!sid) {
           const titles = await titlesFor(ocw ? "ocw" : join("materials", material![1]!));
           const title = titles[name]?.title ?? basename(name);
-          existing.sources[id] = TEXT.test(path) ? { title, file, text: true } : { title, file, pageOffset: 0 };
+          // Short ids read better in citations. A transcript is named after the unit it belongs to.
+          // An OCW file loses its course prefix, like mit18_06scf11_ses1-1sum becoming ses1-1sum.
+          const transcript = TEXT.test(path) || titles[name]?.kind === "transcripts";
+          const base = (transcript ? `${id}-transcript` : ocw ? name.replace(/^mit[0-9a-z]+_[0-9a-z]+_/i, "") : `${material![1]}-${basename(name)}`)
+            .toLowerCase()
+            .replace(/[^a-z0-9-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
+          sid = base;
+          for (let n = 2; existing.sources[sid]; n++) sid = `${base}-${n}`;
+          existing.sources[sid] = TEXT.test(path) ? { title, file, text: true } : { title, file, pageOffset: 0 };
           added = true;
         }
-        part.source = id;
+        part.source = sid;
       }
       if (added) await saveCourse(courseDir, existing);
       const ids = Object.keys(existing.sources);
