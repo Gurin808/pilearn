@@ -12,6 +12,10 @@ Follow the `add-course` skill for `/add-course` or any request to add a book or 
 
 Start one `chapter-reader` subagent per unit, with `cwd` set to that unit's folder in `chapters/`. Units don't depend on each other, so run them async and in parallel.
 
+## Curriculum
+
+If `curriculum.md` exists here, it is the learner's long-term plan. Use it to suggest and set up the next course, to update its status when a course starts or ends, and to link ideas across courses. A tutor at level 2 may read it to point out where an idea comes back later.
+
 ## Across courses
 
 Run spaced recall and mix questions from different courses. Write retention summaries to `aggregate/`.
