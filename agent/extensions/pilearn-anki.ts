@@ -1,7 +1,8 @@
 /**
  * pilearn_anki: the Anki bridge (P11): sends error-driven cards to Anki via
  * AnkiConnect and reads review history back as retention numbers (P7).
- * The per-session card cap (P11: 5–8 per lesson) is enforced here, not left to the prompt (P4).
+ * A safety cap of 8 cards per call, one call per study block, is enforced here (P4). How many cards
+ * a block gets follows its misses, which the tutor skill decides; the cap only stops a runaway call.
  * Daily intake is Anki's job (deck option "new cards/day"), so creation isn't capped per day.
  */
 
@@ -24,7 +25,7 @@ const Params = Type.Object({
         front: Type.String({ description: "Recall prompt; math as $…$ / $$…$$" }),
         back: Type.String({ description: "Answer with printed page reference; math as $…$ / $$…$$" }),
       }),
-      { description: "add: 1–8 atomic cards from this session's missed/partial items only" },
+      { description: "add: 1–8 atomic cards from this block's missed/partial items only" },
     ),
   ),
 });
@@ -72,7 +73,7 @@ export default function (pi: ExtensionAPI) {
     name: "pilearn_anki",
     label: "Anki",
     description:
-      `Anki bridge. add: create recall cards in deck PILearn::<course>, at most ${MAX_PER_SESSION} per session (one call per session). ` +
+      `Anki bridge. add: create recall cards in deck PILearn::<course>, at most ${MAX_PER_SESSION} per call, one call per study block. ` +
       "stats: retention for the course's deck from Anki's review history. Requires Anki open with AnkiConnect.",
     parameters: Params,
 
@@ -82,7 +83,7 @@ export default function (pi: ExtensionAPI) {
       if (params.action === "add") {
         const cards = params.cards ?? [];
         if (cards.length === 0) return result("No cards to add.");
-        if (cards.length > MAX_PER_SESSION) throw new Error(`At most ${MAX_PER_SESSION} cards per session; you sent ${cards.length}. Keep the ${MAX_PER_SESSION} most important misses.`);
+        if (cards.length > MAX_PER_SESSION) throw new Error(`At most ${MAX_PER_SESSION} cards per call; you sent ${cards.length}. Keep the ${MAX_PER_SESSION} most important misses.`);
 
         await ensureModel();
         await anki("createDeck", { deck });

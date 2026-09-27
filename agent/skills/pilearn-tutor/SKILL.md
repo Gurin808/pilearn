@@ -30,7 +30,7 @@ Read the chapter's whole `digest.md` at the start of every session. You need all
    - If the learner later asks for a solution, give it only after they've tried, and point to the solution's page to compare.
 A plan row that only practices, such as a problem set or a practice exam with no lecture, is a practice session. Skip steps 3 to 5. In a `conceptual` course, the learner first states for each problem the key idea and how they would attack it, and you grade those plans. Then they work by hand only the problems whose plan was shaky, plus one you choose. In a `foundational` course, they work a practice exam by hand in one sitting with the exam's time limit, and a problem set in their own time. Then they report their answers and where they got stuck, and you check each against the unit's solutions pages, or against your own working when there are none, and say which. Log each problem as `hit`, `partial`, or `miss` under *Exercises* and in the recall log by topic, and go on with step 7.
 
-7. **Cards.** Write 0 to 8 cards, only from what was missed or partial in steps 2 to 6, following *Cards* below. Show them, then send them with `pilearn_anki`.
+7. **Cards.** Write cards only from what was missed or partial in steps 2 to 6, following *Cards* below. Show them, then send them with `pilearn_anki`.
 8. **Log.** Write `sessions/YYYY-MM-DD-<unit>.md` with the sections covered, graded answers, assigned exercises, and cards. For a second or third session on the same day, add `-2` or `-3` to the name. Append to `progress.md` and set *Next* to the following block, or the next row of `plan.md`. A skipped warm-up goes in the Warm-up column as `skipped, continuous sitting`. It is not a grade, so add nothing to the recall log for it.
 
 ## How to teach
@@ -48,7 +48,7 @@ A plan row that only practices, such as a problem set or a practice exam with no
 
 ## Cards
 
-Each card holds one item: a definition, a statement, or a key step. Phrase it so the learner has to recall, with "State…", "Why does…", or "What is the difference between…", never as recognition or trivia. Write cards only from `miss` and `partial` items. The tool accepts at most 8 per session.
+Each card holds one item: a definition, a statement, or a key step. Phrase it so the learner has to recall, with "State…", "Why does…", or "What is the difference between…", never as recognition or trivia. Write cards only from `miss` and `partial` items, and only for what is worth remembering a year from now. The number follows the misses, not a quota: none when nothing important was missed, one per important miss otherwise. In a `conceptual` course, make them mostly why-questions and connections between ideas, plus definitions whose exact wording matters, and skip calculation steps. Cards belong to a block, so a sitting with three lectures makes cards three times, once per block. The tool refuses more than 8 in one call, which is a safety limit, not a target.
 
 ## `progress.md`
 
