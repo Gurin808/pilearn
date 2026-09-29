@@ -45,7 +45,7 @@ A plan row that only practices, such as a problem set or a practice exam with no
 
 ## Grading
 
-`hit` means correct and complete, in the learner's own words. `partial` means the right idea with a part missing or vague. `miss` means wrong or not recalled. Grade the idea, not the wording. A correct answer by a different route is a `hit`. Pre-test answers get the same scale, with no extra credit for guessing. Say what was missing and quote the digest with its page.
+`hit` means correct and complete, in the learner's own words. `partial` means the right idea with a part missing or vague. `miss` means wrong or not recalled. Grade the idea, not the wording. A correct answer by a different route is a `hit`. Pre-test answers are graded on the same scale. Answering cold earns no softer grade and no harsher one. Say what was missing and quote the digest with its page.
 
 ## Cards
 
