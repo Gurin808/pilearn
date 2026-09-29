@@ -47,7 +47,7 @@ Your `AGENTS.md` says which numbering each range uses and whether to add the sou
 - What the learner should be able to do after this unit, in 2 to 5 bullets
 
 ## Pre-questions
-- (N.M) 2 to 4 questions the learner can only answer after working through the unit, with no spoilers, each tagged with its section
+- (N.M) 2 to 4 questions the learner can only answer after working through the unit, with no spoilers, each tagged with its section. Each one states its own setup, such as the objects, sizes, and rules in play, so a learner who hasn't read the unit understands what is asked. Never refer to an example or exercise by its number.
 
 ## By section
 
