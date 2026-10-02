@@ -12,9 +12,10 @@
     "pilearn": "bin/pilearn.js"
   },
   "scripts": {
-    "start": "node bin/pilearn.js"
+    "start": "node bin/pilearn.js",
+    "test": "node --test"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "^0.87.1"
+    "@earendil-works/pi-coding-agent": "latest"
   }
 }

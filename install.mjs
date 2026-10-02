@@ -11,6 +11,8 @@ import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFi
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureLatestPi } from "./bin/pi-core.js";
+import { ensureLatestPiPackages } from "./bin/pi-packages.js";
 
 const win = process.platform === "win32";
 const SRC = dirname(fileURLToPath(import.meta.url));
@@ -28,12 +30,12 @@ if (!(major > 22 || (major === 22 && minor >= 19))) {
 }
 
 // 1. Pi harness (the core PILearn runs on)
-execFileSync(win ? "npm.cmd" : "npm", ["install", "--no-fund", "--no-audit", "--loglevel=error"], {
+execFileSync(win ? "npm.cmd" : "npm", ["install", "--ignore-scripts", "--no-fund", "--no-audit", "--loglevel=error"], {
   cwd: SRC,
   stdio: "inherit",
   shell: win,
 });
-const PI = join(SRC, "node_modules", "@earendil-works", "pi-coding-agent", "dist", "cli.js");
+const PI = ensureLatestPi(SRC);
 
 // 2. Agent config: the repo's agent/ tree always wins (theme, subagents, skills,
 //    extensions, prompts, templates); the shared level map is installed as AGENTS.md.
@@ -62,19 +64,9 @@ if (!(settings.skills ?? []).includes(NO_SHARED_SKILLS)) {
   writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
 }
 
-// 4. Extension packages listed in settings.json, installed into PILearn's own
-//    package folder (<agent>/npm) so nothing depends on global npm packages.
-const packages = settings.packages ?? [];
-for (const pkg of packages) {
-  const spec = String(typeof pkg === "string" ? pkg : pkg.source ?? "");
-  if (!spec.startsWith("npm:")) continue;
-  const name = spec.slice(4).replace(/(.)@[^@/]*$/, "$1");
-  if (existsSync(join(AGENT, "npm", "node_modules", name))) continue;
-  execFileSync(process.execPath, [PI, "install", spec], {
-    env: { ...process.env, PI_CODING_AGENT_DIR: AGENT },
-    stdio: ["ignore", "ignore", "inherit"],
-  });
-}
+// 4. Remove old npm version pins and reconcile extension packages in PILearn's
+//    own agent directory, including packages that were installed previously.
+ensureLatestPiPackages(AGENT, PI);
 
 // 5. Study workspace: folders created if missing (they hold your study data);
 //    the level-1 AGENTS.md is PILearn's own instructions, so it's always updated.

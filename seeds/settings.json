@@ -3,9 +3,9 @@
     "themes/pilearn.json"
   ],
   "packages": [
-    "npm:pi-subagents@0.40.0",
-    "npm:pi-btw@0.4.1",
-    "npm:pi-docparser@4.0.0"
+    "npm:pi-subagents",
+    "npm:pi-btw",
+    "npm:pi-docparser"
   ],
   "quietStartup": true,
   "collapseChangelog": true,

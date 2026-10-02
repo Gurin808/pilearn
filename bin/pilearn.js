@@ -15,6 +15,8 @@ import { dirname, join, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir, tmpdir } from "node:os";
 import { existsSync, readFileSync, rmSync } from "node:fs";
+import { ensureLatestPi } from "./pi-core.js";
+import { ensureLatestPiPackages } from "./pi-packages.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = join(__dirname, "..");
@@ -53,9 +55,13 @@ if (!existsSync(workDir)) {
   process.exit(1);
 }
 
-const localPi = join(PACKAGE_ROOT, "node_modules", "@earendil-works", "pi-coding-agent", "dist", "cli.js");
-if (!existsSync(localPi)) {
-  console.error(`pilearn: Pi harness not found. Run \`npm install\` in ${PACKAGE_ROOT}`);
+const offline = Boolean(process.env.PI_OFFLINE) || passthrough.includes("--offline");
+let localPi;
+try {
+  localPi = ensureLatestPi(PACKAGE_ROOT, { offline });
+  ensureLatestPiPackages(agentDir, localPi, { offline });
+} catch (error) {
+  console.error(`pilearn: ${error.message}`);
   process.exit(1);
 }
 

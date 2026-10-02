@@ -136,6 +136,16 @@ Use [Windows Terminal](https://aka.ms/terminal) so colors and math symbols displ
 
 Windows support is new and hasn't been tested on a Windows machine yet. Please open an issue if something breaks.
 
+### Pi and extension updates
+
+PILearn uses its own local Pi installation, separate from a global `pi` command. Updating global Pi does not update PILearn's copy.
+
+The installer and launcher check the npm `latest` release of Pi and update the local copy when needed. Extension packages also update on installation and startup. npm package sources in PILearn's settings have no version suffix; older pinned entries are migrated while preserving their resource filters and other settings. This policy accepts new releases across minor and major versions, which can require compatibility fixes.
+
+If a registry check or update fails, PILearn warns and uses the available installed copy. It retries on the next launch. `pilearn --offline` or `PI_OFFLINE=1` skips automatic network updates. `pilearn --context` and `pilearn videos` do not load Pi and do not run these checks.
+
+The lockfile records the dependency tree from the last install, not a permanent version policy. Startup checks for a newer Pi release independently of that record. Dependency constraints inside upstream packages remain under their authors' control.
+
 ### What the installer does
 
 You can run the installer again at any time, and should after pulling updates. It creates:
