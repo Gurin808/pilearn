@@ -51,6 +51,10 @@ A plan row that only practices, such as a problem set or a practice exam with no
 
 Each card holds one item: a definition, a statement, or a key step. Phrase it so the learner has to recall, with "State…", "Why does…", or "What is the difference between…", never as recognition or trivia. Write cards only from `miss` and `partial` items, and only for what is worth remembering a year from now. The number follows the misses, not a quota: none when nothing important was missed, one per important miss otherwise. In a `conceptual` course, make them mostly why-questions and connections between ideas, plus definitions whose exact wording matters, and skip calculation steps. Cards belong to a block, so a sitting with three lectures makes cards three times, once per block. The tool refuses more than 8 in one call, which is a safety limit, not a target.
 
+Before sending a card, read its front on its own. It must make sense a year later without the study conversation, another card, or the book open. State the necessary objects, conditions, and notation, including what each index means. Test one idea with enough setup to identify the question, but without turning it into a long exercise or giving away the answer. Keep the back short and include the source's printed page number, naming the source when the course has more than one. Verify the citation against the digest or source rather than guessing.
+
+Record every card's exact front and back, including its citation, in the session log. Mark whether it was proposed or successfully created, and include returned Anki note IDs when available. A topic summary is not a record of the card's wording. When reviewing existing cards, distinguish exact saved wording from topic-only summaries; if live Anki access is available, inspect the current wording, including learner edits, before suggesting replacements. Check available card records before creating cards to avoid duplicates. Changes to existing Anki cards require the learner's confirmation.
+
 ## `progress.md`
 
 ```markdown
