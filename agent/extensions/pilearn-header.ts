@@ -215,13 +215,14 @@ function digestSections(digest: string): SectionNum[] {
 
 /**
  * Sections covered by the *Sessions* table of `progress.md`. The Sections column holds
- * entries like `1.1–1.4`, `1.9`, or `1.5-1.8, 2.1`; a bare unit id like `ch03` or `ps3` marks the whole unit.
+ * entries like `1.1–1.4`, `1.9`, `1.5-1.8, 2.1`, or `3.6 and 3.7`;
+ * a bare unit id like `ch03` or `ps3` marks the whole unit.
  */
 function coveredSections(progress: string): { has: (s: SectionNum) => boolean; chapters: Set<string> } {
   const ranges: [SectionNum, SectionNum][] = [];
   const chapters = new Set<string>();
   for (const cells of tableRows(progress, "Sessions")) {
-    for (const part of (cells[1] ?? "").split(/[,;]/)) {
+    for (const part of (cells[1] ?? "").split(/[,;]|\band\b/i)) {
       const ch = part.trim().match(/^([a-z][a-z0-9-]*)$/i);
       if (ch) {
         chapters.add(ch[1]!.toLowerCase());
@@ -239,7 +240,7 @@ function coveredSections(progress: string): { has: (s: SectionNum) => boolean; c
   };
 }
 
-async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
+export async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
   const ws = workspaceDir();
   if (!existsSync(ws)) return null;
   const rel = relative(ws, cwd);
@@ -280,7 +281,7 @@ async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
 type Theme = { fg: (token: any, text: string) => string; bold: (text: string) => string };
 type TreeLine = { plain: string; styled: string };
 
-function renderStudyTree(tree: StudyTree, theme: Theme): TreeLine[] {
+export function renderStudyTree(tree: StudyTree, theme: Theme): TreeLine[] {
   const lines: TreeLine[] = [];
   const add = (branch: string, label: string, styled: string) =>
     lines.push({ plain: branch + label, styled: theme.fg("borderMuted", branch) + styled });
