@@ -47,6 +47,13 @@ for (const d of ["agents", "skills", "extensions", "templates", "themes", "promp
 cpSync(join(SRC, "agent"), AGENT, { recursive: true });
 cpSync(join(SRC, "agent", "templates", "shared-AGENTS.md"), join(AGENT, "AGENTS.md"));
 
+// The clipboard extension uses Photon's portable WASM decoder. Copy its declared
+// dependency beside the installed extensions so imports do not depend on Pi internals.
+const photon = join("node_modules", "@silvia-odwyer", "photon-node");
+mkdirSync(dirname(join(AGENT, photon)), { recursive: true });
+rmSync(join(AGENT, photon), { recursive: true, force: true });
+cpSync(join(SRC, photon), join(AGENT, photon), { recursive: true });
+
 // 3. Settings, models, auth, keybindings: seeded only if missing, so local edits
 //    and credentials are never overwritten.
 for (const f of ["settings.json", "models.json", "auth.json", "keybindings.json"]) {

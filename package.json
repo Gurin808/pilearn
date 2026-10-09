@@ -16,6 +16,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "latest"
+    "@earendil-works/pi-coding-agent": "latest",
+    "@silvia-odwyer/photon-node": "0.3.4"
   }
 }

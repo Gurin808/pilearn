@@ -217,7 +217,9 @@ Cmd+V is usually handled by the terminal's ordinary paste action and may not tra
 
 The tutor uses context to resolve clear handwriting. It asks about a specific symbol or line when different plausible readings would change the meaning or feedback, rather than asking about every imperfect mark. Unclear handwriting is not recorded as a mathematical mistake. Actual gaps in your proof still get feedback and hints.
 
-This uses Pi's existing clipboard handling and image-reading tool, without a separate clipboard extension. Submitted images go to your model provider and may be retained in the saved session, so crop out unrelated personal information.
+Use dark ink. Some iPad apps copy handwriting as black ink on a transparent background, which can appear completely black to a model. When the tutor reads a Pi clipboard image that you submitted, PILearn automatically places its transparent pixels on white. Opaque clipboard images are unchanged, as are book pages and other image files. The original file is preserved.
+
+Pi still handles clipboard paste and image reading. PILearn's small `pilearn-clipboard` extension adjusts only the returned clipboard image, using local image processing with no OCR, extra model call, or ink-color detection. You do not need ImageMagick or another command-line converter. Submitted images go to your model provider and may be retained in the saved session, so crop out unrelated personal information.
 
 ## How it's organized
 
@@ -232,14 +234,14 @@ Each level has an `AGENTS.md` that tells the model its role. Each level reads on
 PILearn stays inside your study folder. It teaches from your book and its own training, and cites printed page numbers so you can check any claim. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
 
 - Writing is allowed only inside the workspace, `~/study`.
-- Reading is allowed in the workspace, in each course's linked books, which live elsewhere, and in PILearn's config except the files that hold credentials.
+- Reading is allowed in the workspace, in each course's linked books, which live elsewhere, in PILearn's config except the files that hold credentials, and in the system temporary directory for screenshots and pasted clipboard images.
 - Subagents can only start inside the workspace.
 
 The only internet access is Wikipedia and Wikidata, for `/history`. The guard limits what the model's tools can do. It is not an operating-system sandbox, and your own `!command` shell in PILearn works as usual.
 
 Repo layout:
 
-- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `add-course`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`), prompts, and templates.
+- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `add-course`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`, `pilearn-clipboard`), prompts, and templates.
 - `bin/pilearn.js` is the launcher.
 - `seeds/` has the first-install settings, models, auth, and keybindings, with no secrets.
 - `install.mjs` is the installer for all platforms. `install.sh` runs it on macOS and Linux.
