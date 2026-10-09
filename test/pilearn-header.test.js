@@ -41,6 +41,18 @@ test("ranges and comma-separated sections still mark a chapter studied", async (
   assert.equal(tree.courses[0].chapters[0].studied, true);
 });
 
+test("startup accepts ranges phrased with 'to' followed by introduction", async (t) => {
+  const tree = await treeFor(t, ["3.1 to 3.10, introduction"]);
+  const lines = renderStudyTree(tree, theme).map((line) => line.plain).join("\n");
+  assert.match(lines, /bookofproof\/ 1\/1/);
+  assert.match(lines, /ch03 ✓/);
+});
+
+test("a 'to' range does not cover sections beyond its endpoint", async (t) => {
+  const tree = await treeFor(t, ["3.1 to 3.9, introduction"]);
+  assert.equal(tree.courses[0].chapters[0].studied, false);
+});
+
 test("a bare unit id still marks the whole chapter studied", async (t) => {
   const tree = await treeFor(t, ["ch03"]);
   assert.equal(tree.courses[0].chapters[0].studied, true);

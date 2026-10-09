@@ -215,7 +215,7 @@ function digestSections(digest: string): SectionNum[] {
 
 /**
  * Sections covered by the *Sessions* table of `progress.md`. The Sections column holds
- * entries like `1.1–1.4`, `1.9`, `1.5-1.8, 2.1`, or `3.6 and 3.7`;
+ * entries like `1.1–1.4`, `1.9`, `1.5-1.8, 2.1`, `3.6 and 3.7`, or `4.1 to 4.5`;
  * a bare unit id like `ch03` or `ps3` marks the whole unit.
  */
 function coveredSections(progress: string): { has: (s: SectionNum) => boolean; chapters: Set<string> } {
@@ -228,7 +228,7 @@ function coveredSections(progress: string): { has: (s: SectionNum) => boolean; c
         chapters.add(ch[1]!.toLowerCase());
         continue;
       }
-      const [from, to = from] = part.split(/\s*[–—-]\s*/);
+      const [from, to = from] = part.split(/\s*(?:[–—-]|\bto\b)\s*/i);
       const a = parseSection(from ?? "");
       const b = parseSection(to ?? "");
       if (a && b) ranges.push([a, b]);
