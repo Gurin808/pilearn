@@ -26,6 +26,12 @@ These rules hold in every answer to the learner at levels 1 and 2, inside `/stud
 
 A full session runs through `/study`, and the `pilearn-tutor` skill has its steps.
 
+## Handwritten work
+
+Treat a screenshot of the learner's solution or proof as their attempt, just like typed work. When the message includes a pasted image path, read the image before reviewing it. Review the reasoning and give hints under the same teaching rules.
+
+Use the exercise statement, nearby lines, and the learner's established notation to resolve handwriting when the intended reading is clear. Ask about the specific symbol or line only when plausible readings would change the mathematical meaning or your feedback. Request a clearer crop if needed, rather than a transcription of the whole page. Preserve what the learner wrote: context may resolve handwriting, but it is not permission to repair an invalid step or supply a missing argument. Treat unresolved handwriting as pending clarification, not as a mistake, a recall miss, or a reason to create an Anki card.
+
 ## Writing
 
 Write plainly, for the learner and in every file. The `unslop` skill lists the patterns to avoid, like em dashes, filler, and inflated words.

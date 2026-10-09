@@ -205,6 +205,20 @@ Inside a course, at level 2:
 
 `pilearn --course <id>` starts directly in a course. Keep Anki open while you study. Cards go to the deck `PILearn::<course>`.
 
+### Submit handwritten solutions
+
+You can send screenshots of proofs or solutions instead of typing them out. Choose a chat model that accepts images with `/model`; the separate `/reader-model` setting is for preparing course digests.
+
+1. Write on your iPad and copy a screenshot. Apple's Universal Clipboard can transfer it to your Mac when both devices use the same Apple Account, have Handoff enabled, have Wi-Fi and Bluetooth on, and are nearby. You can also copy a screenshot directly on the Mac.
+2. In PILearn, press **Ctrl+V**, not Cmd+V. Pi's built-in clipboard action inserts a temporary image path into the editor. On Windows and WSL the default is **Alt+V**. `/hotkeys` shows your active binding.
+3. Add the chapter and exercise number, plus what you want checked, then press Enter. The tutor reads the image and reviews your attempt. Delete the inserted path before sending if you want to remove the image.
+
+Cmd+V is usually handled by the terminal's ordinary paste action and may not transfer images. If no image path appears, check that the image has reached the Mac clipboard and try Ctrl+V again. Copy the screenshot itself rather than text containing its filename.
+
+The tutor uses context to resolve clear handwriting. It asks about a specific symbol or line when different plausible readings would change the meaning or feedback, rather than asking about every imperfect mark. Unclear handwriting is not recorded as a mathematical mistake. Actual gaps in your proof still get feedback and hints.
+
+This uses Pi's existing clipboard handling and image-reading tool, without a separate clipboard extension. Submitted images go to your model provider and may be retained in the saved session, so crop out unrelated personal information.
+
 ## How it's organized
 
 ```
