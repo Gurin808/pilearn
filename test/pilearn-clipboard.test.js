@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
-import { readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { createReadTool } from "@earendil-works/pi-coding-agent";
@@ -20,25 +20,41 @@ function pixels(data) {
   finally { image.free(); }
 }
 
-function fixture(t, { transparent = true, name = `pi-clipboard-${randomUUID()}.png` } = {}) {
+function fixture(t, { transparent = true, ink = 0, name = `pi-clipboard-${randomUUID()}.png` } = {}) {
+  const agentDir = mkdtempSync(join(tmpdir(), "pilearn-clipboard-config-"));
+  const previous = process.env.PI_CODING_AGENT_DIR;
+  process.env.PI_CODING_AGENT_DIR = agentDir;
+  t.after(() => {
+    if (previous === undefined) delete process.env.PI_CODING_AGENT_DIR;
+    else process.env.PI_CODING_AGENT_DIR = previous;
+    rmSync(agentDir, { recursive: true, force: true });
+  });
   const raw = new Uint8Array(32 * 32 * 4).fill(255);
-  raw.set([0, 0, 0, transparent ? 0 : 255], 0);
-  raw.set([0, 0, 0, 255], 4);
-  raw.set([0, 0, 0, transparent ? 128 : 255], 8);
+  raw.set([ink, ink, ink, transparent ? 0 : 255], 0);
+  raw.set([ink, ink, ink, 255], 4);
+  raw.set([ink, ink, ink, transparent ? 128 : 255], 8);
   const original = png(raw);
   const path = join(tmpdir(), name);
   writeFileSync(path, original);
   t.after(() => rmSync(path, { force: true }));
   const handlers = new Map();
-  clipboard({ on: (name, handler) => handlers.set(name, handler) });
-  const ctx = { cwd: tmpdir(), sessionManager: { getBranch: () => [] } };
+  const commands = new Map();
+  const statuses = new Map();
+  const notices = [];
+  const api = { on: (name, handler) => handlers.set(name, handler), registerCommand: (name, command) => commands.set(name, command) };
+  clipboard(api);
+  const ctx = {
+    cwd: tmpdir(), hasUI: true, sessionManager: { getBranch: () => [] },
+    ui: { setStatus: (key, text) => statuses.set(key, text), notify: (text, level) => notices.push({ text, level }) },
+  };
   const submit = () => handlers.get("input")({ source: "interactive", text: `Check exercise #1\n${path}` }, ctx);
   const read = async () => {
     const result = await createReadTool(tmpdir()).execute("test", { path });
     const event = { type: "tool_result", toolName: "read", toolCallId: "test", input: { path }, isError: false, ...result };
     return { event, changed: await handlers.get("tool_result")(event, ctx) };
   };
-  return { path, original, handlers, ctx, submit, read };
+  const command = (args) => commands.get("clipboard-background").handler(args, ctx);
+  return { path, original, agentDir, api, handlers, commands, statuses, notices, ctx, command, submit, read };
 }
 
 test("a pasted transparent proof reaches the model with white paper and preserved black ink", async (t) => {
@@ -53,8 +69,85 @@ test("a pasted transparent proof reaches the model with white paper and preserve
   assert.equal(changed.structuredContent.data, image.data, "codemode receives the same flattened image");
 });
 
+test("black paper preserves white ink and saves the chosen background", async (t) => {
+  const f = fixture(t, { ink: 255 });
+  await f.command("black");
+  await f.submit();
+  const { changed } = await f.read();
+  const image = changed.content.find((block) => block.type === "image");
+  assert.deepEqual(Array.from(pixels(image.data).slice(0, 12)), [0, 0, 0, 255, 255, 255, 255, 255, 128, 128, 128, 255]);
+  assert.equal(JSON.parse(readFileSync(join(f.agentDir, "clipboard.json"), "utf8")).background, "black");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: black");
+  assert.match(changed.structuredContent.note, /placed on black/);
+  assert.deepEqual(readFileSync(f.path), f.original);
+});
+
+test("the background choice survives a fresh extension instance", async (t) => {
+  const f = fixture(t, { ink: 255 });
+  await f.command("black");
+  clipboard(f.api);
+  await f.handlers.get("session_start")({}, f.ctx);
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: black");
+  await f.submit();
+  const { changed } = await f.read();
+  const image = changed.content.find((block) => block.type === "image");
+  assert.deepEqual(Array.from(pixels(image.data).slice(0, 8)), [0, 0, 0, 255, 255, 255, 255, 255]);
+});
+
+test("toggle switches both ways and serializes concurrent changes", async (t) => {
+  const f = fixture(t);
+  await f.command("toggle");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: black");
+  await f.command("toggle");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: white");
+  await Promise.all([f.command("toggle"), f.command("toggle")]);
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: white");
+  assert.equal(JSON.parse(readFileSync(join(f.agentDir, "clipboard.json"), "utf8")).background, "white");
+});
+
+test("white is the default and checking it creates no preference file", async (t) => {
+  const f = fixture(t);
+  await f.handlers.get("session_start")({}, f.ctx);
+  await f.command("");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: white");
+  assert.equal(existsSync(join(f.agentDir, "clipboard.json")), false);
+  assert.match(f.notices.at(-1).text, /background is white/);
+});
+
+test("invalid commands leave the saved background unchanged", async (t) => {
+  const f = fixture(t);
+  await f.command("black");
+  await f.command("automatic");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: black");
+  assert.equal(JSON.parse(readFileSync(join(f.agentDir, "clipboard.json"), "utf8")).background, "black");
+  assert.equal(f.notices.at(-1).level, "warning");
+});
+
+test("an unreadable preference warns and uses white without overwriting it", async (t) => {
+  const f = fixture(t);
+  const path = join(f.agentDir, "clipboard.json");
+  writeFileSync(path, "broken JSON");
+  await f.handlers.get("session_start")({}, f.ctx);
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: white");
+  assert.equal(f.notices.at(-1).level, "warning");
+  assert.equal(readFileSync(path, "utf8"), "broken JSON");
+});
+
+test("a failed save does not change the active background", async (t) => {
+  const f = fixture(t);
+  await f.handlers.get("session_start")({}, f.ctx);
+  mkdirSync(join(f.agentDir, "clipboard.json"));
+  await f.command("black");
+  assert.equal(f.statuses.get("clipboard-background"), "clipboard background: white");
+  assert.equal(f.notices.at(-1).level, "error");
+  await f.submit();
+  const { changed } = await f.read();
+  assert.match(changed.structuredContent.note, /placed on white/);
+});
+
 test("ordinary images are unchanged even when submitted in the same way", async (t) => {
   const f = fixture(t, { name: `pilearn-book-page-${randomUUID()}.png` });
+  await f.command("black");
   await f.submit();
   const { changed } = await f.read();
   assert.equal(changed, undefined);
@@ -75,6 +168,7 @@ test("extension-injected paths do not opt images into white-background handling"
 
 test("opaque clipboard images keep their original result and encoding", async (t) => {
   const f = fixture(t, { transparent: false });
+  await f.command("black");
   await f.submit();
   const { changed } = await f.read();
   assert.equal(changed, undefined);

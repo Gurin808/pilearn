@@ -217,7 +217,17 @@ Cmd+V is usually handled by the terminal's ordinary paste action and may not tra
 
 The tutor uses context to resolve clear handwriting. It asks about a specific symbol or line when different plausible readings would change the meaning or feedback, rather than asking about every imperfect mark. Unclear handwriting is not recorded as a mathematical mistake. Actual gaps in your proof still get feedback and hints.
 
-Use dark ink. Some iPad apps copy handwriting as black ink on a transparent background, which can appear completely black to a model. When the tutor reads a Pi clipboard image that you submitted, PILearn automatically places its transparent pixels on white. Opaque clipboard images are unchanged, as are book pages and other image files. The original file is preserved.
+Some iPad apps copy handwriting on a transparent background, which can make the ink disappear when the model displays it. When the tutor reads a Pi clipboard image that you submitted, PILearn places its transparent pixels on the background you choose. White is the default for dark ink. Choose black for white or light ink:
+
+```text
+/clipboard-background white
+/clipboard-background black
+/clipboard-background toggle
+```
+
+`toggle` switches between white and black, rather than turning the background off. Run `/clipboard-background` without an argument to see the current choice. The footer shows `clipboard background: white` or `black`. Your choice is saved in `~/.pilearn/agent/clipboard.json`, shared across courses, and survives restarts and reinstalls.
+
+The setting applies on the next image read. To change an image already sent to the model, switch the background and ask the tutor to reread it. Opaque clipboard images are unchanged, as are book pages and other image files. The original file is preserved.
 
 Pi still handles clipboard paste and image reading. PILearn's small `pilearn-clipboard` extension adjusts only the returned clipboard image, using local image processing with no OCR, extra model call, or ink-color detection. You do not need ImageMagick or another command-line converter. Submitted images go to your model provider and may be retained in the saved session, so crop out unrelated personal information.
 
