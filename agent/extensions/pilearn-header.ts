@@ -2,8 +2,9 @@
  * PILearn session header: a persistent status panel (model, directory,
  * session, system, tools/agents, recent activity, workflows) shown above
  * the input, built on the documented `ctx.ui.setHeader()` extension API.
- * Layout and helper functions adapted from Feynman's `research-tools/header.ts`
- * (MIT, Copyright (c) 2026 Companion, Inc.; see THIRD_PARTY_NOTICES.md).
+ * Layout and helper functions adapted from Feynman's `research-tools/header.ts`.
+ * Lowercase lettering follows Feynman's logo.mjs. The enlarged pi mark keeps
+ * Pi's pixel layout and brand colors. See THIRD_PARTY_NOTICES.md for licenses.
  */
 
 import { existsSync } from "node:fs";
@@ -11,19 +12,49 @@ import { readdir, readFile } from "node:fs/promises";
 import { cpus, homedir, totalmem } from "node:os";
 import { join, relative, resolve as resolvePath, sep } from "node:path";
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext, Theme as PiTheme } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
-import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { rgbColor, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 const PILEARN_VERSION = process.env.PILEARN_VERSION ?? "dev";
 
-const PILEARN_LOGO = [
-  "██████████ ██████████ ██         ██████████   ██████   ████████   ██      ██",
-  "██      ██     ██     ██         ██         ██      ██ ██      ██ ████    ██",
-  "██████████     ██     ██         ████████   ██████████ ████████   ██  ██  ██",
-  "██             ██     ██         ██         ██      ██ ██    ██   ██    ████",
-  "██         ██████████ ██████████ ██████████ ██      ██ ██      ██ ██      ██",
+// Pi's fixed brand colors, independent of the surrounding terminal theme.
+const PI_CORAL = rgbColor(228, 138, 122);
+const PI_BLUE = rgbColor(79, 142, 179);
+const PI_YELLOW = rgbColor(234, 182, 93);
+const PILEARN_LOGO_WIDTH = 76;
+const LEARN_LOGO = [
+  "███",
+  "███",
+  "███       ██████     ███████    ███ ████   ███ █████ ",
+  "███     ███   ███          ███  ████   ██  ████   ███",
+  "███     ██████████   █████████  ███        ███    ███",
+  "███     ███         ███    ███  ███        ███    ███",
+  " █████    ███████    ██████ ██  ███        ███    ███",
 ];
+
+export function renderPilearnLogo(theme: Pick<PiTheme, "fg" | "style">, width: number): string[] {
+  const coral = (text: string) => theme.style(text, { fg: PI_CORAL });
+  const blue = (text: string) => theme.style(text, { fg: PI_BLUE });
+  const yellow = (text: string) => theme.style(text, { fg: PI_YELLOW });
+  if (width < PILEARN_LOGO_WIDTH) {
+    if (width < 1) return [];
+    return [truncateToWidth(coral("p") + yellow("i") + theme.fg("text", "learn"), width, "")];
+  }
+
+  // Fivefold scaling of Pi's 4 by 4 pixel mark. Half blocks preserve square
+  // pixels where a color boundary falls halfway through a terminal row.
+  const top = coral("███████████████") + "     ";
+  const elbow = theme.style("▀▀▀▀▀", { fg: PI_CORAL, bg: PI_BLUE }) + coral("▀▀▀▀▀█████") + "     ";
+  const bowl = blue("█████") + "     " + coral("█████") + "     ";
+  const middle = blue("██████████") + "     " + yellow("█████");
+  const taper = blue("█████▀▀▀▀▀") + "     " + yellow("█████");
+  const stem = blue("█████") + "          " + yellow("█████");
+  const mark = [top, top, elbow, bowl, bowl, middle, middle, taper, stem, stem];
+
+  // The lowercase bodies share the yellow i's height and baseline. Only l ascends.
+  return mark.map((line, row) => line + "   " + theme.fg("text", (LEARN_LOGO[row - 3] ?? "").padEnd(53)));
+}
 
 function visibleLength(text: string): number {
   return visibleWidth(text);
@@ -355,9 +386,9 @@ export default function (pi: ExtensionAPI) {
       render(width: number): string[] {
         const TREE_GAP = 3;
         const treeLines = studyTree ? renderStudyTree(studyTree, theme) : [];
-        const treeW = treeLines.length ? Math.min(44, Math.max(...treeLines.map((l) => visibleWidth(l.plain)))) : 0;
+        const treeW = treeLines.length ? Math.min(44, Math.max(width - 2, 1), Math.max(...treeLines.map((l) => visibleWidth(l.plain)))) : 0;
         const maxW = Math.max(width - 2, 1);
-        const sideBySide = treeLines.length > 0 && maxW >= 74 + TREE_GAP + treeW;
+        const sideBySide = treeLines.length > 0 && maxW >= PILEARN_LOGO_WIDTH + TREE_GAP + treeW;
         const cardW = sideBySide ? Math.min(maxW - TREE_GAP - treeW, 120) : Math.min(maxW, 120);
         const innerW = cardW - 2;
         const contentW = innerW - 2;
@@ -387,14 +418,11 @@ export default function (pi: ExtensionAPI) {
         const dirLabel = formatHeaderPath(ctx.cwd);
 
         push("");
-        if (cardW >= 70) {
-          const maxLogoW = Math.max(...PILEARN_LOGO.map((l) => l.length));
-          const logoOffset = " ".repeat(Math.max(0, Math.floor((cardW - maxLogoW) / 2)));
-          for (const logoLine of PILEARN_LOGO) {
-            push(theme.fg("accent", theme.bold(`${logoOffset}${truncateVisible(logoLine, cardW)}`)));
-          }
-          push("");
-        }
+        const logo = renderPilearnLogo(theme, cardW);
+        const maxLogoW = Math.max(0, ...logo.map(visibleWidth));
+        const logoOffset = " ".repeat(Math.max(0, Math.floor((cardW - maxLogoW) / 2)));
+        for (const line of logo) push(logoOffset + line);
+        push("");
 
         boxStart = card.length;
         const versionTag = ` v${PILEARN_VERSION} `;
