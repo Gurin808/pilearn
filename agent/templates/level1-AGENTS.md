@@ -18,4 +18,4 @@ If `curriculum.md` exists here, it is the learner's long-term plan. Use it to su
 
 ## Across courses
 
-Run spaced recall and mix questions from different courses. Write retention summaries to `aggregate/`.
+Mix delayed recall and independent applications from studied courses. Choose a short set using the latest independent results and time since practice, rather than every historical miss. Write evidence summaries to `aggregate/`, separating guided work from independent recall and transfer.

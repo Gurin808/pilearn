@@ -10,7 +10,7 @@ Read `node_modules/@earendil-works/pi-coding-agent/docs/` and `examples/extensio
 
 `agent/` in this repo is canonical. `install.mjs`, which `install.sh` wraps, is the only install path, and it always overwrites the copies in `~/.pilearn/agent`. Edit here, not there, then run `sh install.sh` to sync and test live. Never commit credentials. `seeds/` holds only an empty provider list and an empty `auth.json`.
 
-`agent/templates/` holds PILearn's runtime instructions, written for the tutor, not for you. `shared-AGENTS.md` is installed as `~/.pilearn/agent/AGENTS.md` and loads in every PILearn session. `level1-AGENTS.md` becomes `~/study/AGENTS.md`. The `pilearn_scaffold` tool fills in `level2` and `level3` when it creates course and chapter folders. The files are named `*-AGENTS.md` so they don't load as instructions while you edit this repo.
+`agent/templates/` holds PILearn's runtime instructions, written for the tutor, not for you. `shared-AGENTS.md` is installed as `~/.pilearn/agent/AGENTS.md` and loads in every PILearn session. `level1-AGENTS.md` becomes `~/study/AGENTS.md`. The `pilearn_scaffold` tool fills in `level2` and `level3` when it creates course and chapter folders. The files are named `*-AGENTS.md` so they don't load as instructions while you edit this repo. The installer migrates only known old policy sentences in existing course-level files, preserving course-specific paths and additions. Tests cover those migrations and the retirement of the bundled theme.
 
 ## Writing instructions
 

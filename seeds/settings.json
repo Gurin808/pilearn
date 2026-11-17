@@ -1,7 +1,4 @@
 {
-  "themes": [
-    "themes/pilearn.json"
-  ],
   "packages": [
     "npm:pi-subagents",
     "npm:pi-btw",
@@ -11,7 +8,6 @@
   "collapseChangelog": true,
   "defaultThinkingLevel": "medium",
   "editorPaddingX": 1,
-  "theme": "pilearn",
   "defaultTools": [
     "read",
     "edit",

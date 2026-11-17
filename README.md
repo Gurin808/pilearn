@@ -1,8 +1,8 @@
 # PILearn
 
-PILearn is an AI tutor for learning from books and MIT OpenCourseWare courses. It runs on [Pi](https://github.com/earendil-works/pi), the agent core that Feynman also uses. The book is the ground truth. PILearn first condenses each chapter into a short digest. Then it runs study sessions with a pre-test, reading, recall in your own words, practice, and spaced review, and sends what you missed to Anki.
+PILearn is an AI tutor for learning from books and course materials, including MIT OpenCourseWare. It runs on [Pi](https://github.com/earendil-works/pi), the agent core that Feynman also uses. Chapter digests help the tutor navigate the material, while original sources and solutions remain available for checking. The tutor explains unfamiliar ideas, uses hints on problems you can meaningfully attempt, and checks delayed recall and independent application. Important weaknesses that remain after teaching can become Anki cards.
 
-The teaching follows research on how people learn: retrieval practice, pretesting, spacing, interleaving, trying before being told, and guided worked examples. The session steps are in `agent/skills/pilearn-tutor/SKILL.md`. The evidence behind each choice, and a log of every design decision, are in `docs/design-notes.md`.
+The teaching is informed by research on retrieval, spacing, pretesting, self-explanation, and worked examples. These are choices to adapt to the learner, not compulsory activities in every session. The teaching policy is in `agent/templates/shared-AGENTS.md` and `agent/skills/pilearn-tutor/SKILL.md`. The rationale and decision history are in `docs/design-notes.md`.
 
 ## Why PILearn
 
@@ -18,7 +18,7 @@ Because understanding is the point. What makes learning fulfilling is seeing the
 
 That doesn't make hard problems useless. They're how the connections get made. A hard problem forces you to think, and what you had to think hard about is what stays. The goal isn't to get good at those particular problems. It's to use them to get the idea. How much practice that takes depends on the subject. Fundamentals, like a first course in proofs, deserve a lot of work by hand, because everything later builds on being fluent there. In other subjects, getting the idea is often enough.
 
-So PILearn tests understanding by having you explain things in your own words, and it assigns a few exercises to do on paper, chosen for where you struggled. It doesn't grade your arithmetic.
+So PILearn asks you to explain ideas and use them independently, including on paper. It chooses practice for the understanding it builds. Arithmetic slips get corrected, but they aren't confused with conceptual gaps.
 
 ## The science behind PILearn
 
@@ -28,36 +28,39 @@ PILearn applies findings from cognitive and educational psychology. Each choice 
 
 - **Active learning beats lecturing.** A meta-analysis of 225 studies in undergraduate STEM found that active learning raised exam performance by 0.47 standard deviations and cut failure rates from 33.8% to 21.8% (Freeman et al., 2014).
 - **Feeling that you learned is a poor guide.** In a randomized crossover experiment with identical material, students who first tried the problems themselves learned more (+0.46 SD on an independent test) but *felt* they had learned less (−0.56 SD) than students who got a polished lecture. Novices mistake the effort of real learning for not learning (Deslauriers et al., 2019).
-- **An AI tutor can work if it's structured.** In a randomized trial with 194 students, an AI tutor built on these principles beat in-class active learning by 0.63 SD, in less time: a median of 49 minutes against a 60-minute class. Two features made it work. A system prompt alone wasn't enough, so the platform walked students through each problem step by step. And the AI worked from answers written by experts instead of producing its own (Kestin et al., 2025).
+- **An AI tutor can work if it's structured.** In a randomized trial with 194 students, an AI tutor built on these principles beat in-class active learning by 0.63 SD, in less time: a median of 49 minutes against a 60-minute class. The design included a platform that walked students through each problem part and answers written by experts. The study tested that combined design, not the isolated contribution of each feature (Kestin et al., 2025).
 - **An unstructured AI can hurt.** In a field experiment in high-school math, students with open GPT-4 access did better during practice but worse once the AI was taken away. A tutor that gave hints written by teachers instead of answers reduced the harm (Bastani et al., 2025).
 
 ### Principles and how PILearn applies them
 
 | Principle | What the research shows | In PILearn |
 |---|---|---|
-| Retrieval practice | Recalling material strengthens memory more than rereading it (Roediger & Karpicke, 2006; Karpicke & Roediger, 2008; Roediger & Butler, 2011). Practice testing is among the most useful study techniques (Dunlosky et al., 2013). | Every session asks you to recall in your own words. `/review` sessions. Anki cards. |
-| Pretesting | Trying to answer before studying, even without success, helps you learn that material later (Kornell, Hays & Bjork, 2009; Pan & Carpenter, 2023). | Pre-questions before each block of sections, scored as a pre-test. |
+| Retrieval practice | Recalling studied material improves later retention (Roediger & Karpicke, 2006; Karpicke & Roediger, 2008; Roediger & Butler, 2011). Practice testing is among the most useful study techniques (Dunlosky et al., 2013). | Delayed checks, `/review`, and Anki complement explanations and independent practice. |
+| Pretesting | Trying to answer before studying can improve subsequent learning (Kornell, Hays & Bjork, 2009; Pan & Carpenter, 2023). | A few optional pre-questions focus attention or reveal prerequisites. Cold misses alone don't create cards. |
 | Spacing | Spreading practice over time helps long-term retention more than cramming it together (Cepeda et al., 2006). | Warm-ups on earlier chapters, `/review`, and Anki's schedule. |
 | Interleaving | Mixing problem types during practice improves later performance in math (Rohrer & Taylor, 2007). | Warm-ups and reviews mix chapters instead of grouping them. |
-| Desirable difficulties | Conditions that make learning feel harder can make it last longer (Bjork & Bjork, 2011, 2020). | Hard problems on purpose, and progress judged by recall, not by ease. |
-| Attempt first | Working on a problem before instruction can deepen understanding and transfer (Kapur, 2008, 2016; meta-analysis in Sinha & Kapur, 2021). Trying first, then hearing the explanation, beat a fluent lecture in Deslauriers et al. (2019). | You try before the tutor explains, and hints come before solutions. |
-| Guidance and worked examples | For novices, instruction with little guidance works worse than guided instruction (Kirschner, Sweller & Clark, 2006). Worked examples whose steps are removed one at a time ease the move to solving problems alone (Renkl & Atkinson, 2003). | A fixed eight-step session, and one worked example per block where you take over more of each step. |
+| Desirable difficulties | Some difficulties improve retention, but difficulty by itself is not a learning benefit (Bjork & Bjork, 2011, 2020). | Effort goes into retrieving and applying ideas, with clear questions and challenge matched to readiness. |
+| Attempt first | Problem solving followed by instruction can improve understanding and transfer under suitable conditions (Kapur, 2008, 2016; Sinha & Kapur, 2021). | Try familiar methods before receiving hints. Missing prerequisites and requests for explanation get direct teaching. |
+| Guidance and worked examples | Novices benefit from guidance, and fading worked steps can support independent problem solving (Kirschner, Sweller & Clark, 2006; Renkl & Atkinson, 2003). | Explain or demonstrate unfamiliar methods, then reduce help. The session flow adapts rather than requiring every activity. |
 | Self-explanation | Explaining material to yourself improves understanding (Chi et al., 1989). Constructive and interactive engagement beats passive engagement (Chi & Wylie, 2014). | You explain in your own words, link ideas to earlier chapters, and look at an idea from a second side. |
-| Conceptual and procedural knowledge | The two grow together and support each other (Rittle-Johnson, Schneider & Star, 2015). | A per-course setting, `foundational` or `conceptual`, decides how many exercises you do by hand. |
-| Feeling ≠ learning | See Deslauriers et al. (2019) above. | Progress is judged only by what you can recall, never by how a session felt. |
-| Structure and a fixed source | See Kestin et al. (2025) and Bastani et al. (2025) above. | Tools enforce the step order and limits, the book is the ground truth, the only web access is Wikipedia for history, and no answer comes before an attempt. |
+| Conceptual and procedural knowledge | The two grow together and support each other (Rittle-Johnson, Schneider & Star, 2015). | `foundational` and `conceptual` practice settings guide workload rather than set a minimum. Guided plans and independent solutions are recorded separately. |
+| Feeling ≠ learning | See Deslauriers et al. (2019) above. | Delayed recall, independent application, and transfer supply evidence. Frustration and fatigue inform pacing, not grades. |
+| Structure and source checking | See Kestin et al. (2025) and Bastani et al. (2025) above. | Prompts guide sessions; tools do not enforce lesson order. The tutor checks difficult feedback against available solutions and distinguishes its own reasoning from source-checked work. |
 | Context, not decoration | Interesting details that don't serve the idea, "seductive details", can hurt learning (Harp & Mayer, 1998). | `/history` tells the problem or experiment behind an idea and the people involved, only when you ask, and always leads back to the idea. |
 
-The research on trying first and the research on guidance pull in different directions. Kapur (2016) and Sinha & Kapur (2021) describe when struggling first pays off. PILearn takes the overlap, a short attempt first inside a guided sequence.
+The teacher chooses between explanation, a worked example, retrieval, and independent practice based on your responses. It uses your existing attempt instead of asking you to repeat it, and teaches a missing step when hints stop helping. Extra analogies, prerequisite explanations, and teaching examples are allowed, with their origin made clear and no invented source citations.
 
 ### How PILearn measures itself
 
-Each block of sections gets a pre-test and a post-test with the same questions. Warm-ups and `/review` measure recall days later, grouped by how long ago you studied a chapter. Anki reports retention over the last 30 days. `/progress` puts these side by side. It's one learner checking their own study, not a controlled study, but it's the evidence PILearn is judged by.
+When pre/post checks are useful, the tutor compares only matched items with comparable difficulty, stated denominators, and the help received. Extra diagnostic questions aren't folded into that comparison. Older unmatched totals remain in the history but aren't reported as a measured gain.
+
+Warm-ups and `/review` check delayed recall and independent use, sometimes in a changed context. Records distinguish independent, hinted, and modeled answers. Review targets follow the latest independent evidence rather than treating every old miss as permanently weak. Anki's last-30-day retention and longest interval describe card reviews, not overall understanding. `/progress` reports these sources of evidence separately. They do not establish that PILearn caused an improvement or outperforms another teacher.
 
 ### Limits
 
-- Most of this evidence comes from classroom studies with university or school students, mostly in STEM. Whether it carries over to one person studying a book with an AI tutor is an assumption PILearn tests on itself, not a finding.
-- Some choices are engineering or rules of thumb, not results. That covers the three levels and the chapter digests, which keep a whole book from having to fit in the model's context, and the numeric limits: 8 cards per session and the number of exercises.
+- Most evidence comes from particular classroom or laboratory settings. PILearn is research-informed, not a validated reproduction of those interventions.
+- Unlike Kestin's platform, PILearn has no lesson-state controller enforcing the sequence and no complete set of expert-written, question-specific answers. Digests and answer notes are generated summaries that can contain errors. Source checks improve traceability but don't guarantee correctness.
+- The three levels, digest lengths, suggested exercise counts, and limit of 8 cards per tool call are engineering choices or rules of thumb, not established optima.
 - *Why PILearn* above is a personal view.
 
 ### References
@@ -150,9 +153,11 @@ The lockfile records the dependency tree from the last install, not a permanent 
 
 You can run the installer again at any time, and should after pulling updates. It creates:
 
-- `~/.pilearn/agent`, PILearn's config with theme, skills, extensions, and settings. It never overwrites your settings, models, or credentials.
+- `~/.pilearn/agent`, PILearn's skills, extensions, prompts, and settings. Existing models, credentials, and keybindings are preserved. Settings migrations remove the retired PILearn theme and keep shared skills outside the tutor's allowed folders excluded. Other preferences and user themes are preserved. With no theme selection, Pi uses its default `system` theme, matching the terminal.
 - `~/study`, your study workspace with courses, progress, and session logs. Set `PILEARN_WORKSPACE` before installing to use another folder.
 - the `pilearn` launcher, at `~/.local/bin/pilearn` on macOS and Linux and `%USERPROFILE%\.pilearn\bin\pilearn.cmd` on Windows. Set `PILEARN_BIN` to put it elsewhere.
+
+Reinstalling refreshes package-owned instructions and migrates known old wording in course-level `AGENTS.md` files without replacing course paths or personal additions. It leaves books, digests, progress, session logs, and Anki data intact.
 
 ## Models
 
@@ -197,9 +202,9 @@ pilearn                    # starts at level 1 (~/study)
 
 Inside a course, at level 2:
 
-- `/study [chapter or sections]` runs one session: warm-up, pre-test, reading, recall and post-test, a worked example, exercises to do by hand, Anki cards, and the log.
-- `/review` runs a recall-only session across the chapters you've studied.
-- `/progress` shows gains from pre-test to post-test, retention over time, and Anki retention.
+- `/study [chapter or sections]` runs an adaptive session with reading or guided explanation, useful checks, and independent practice. It skips redundant activities and logs the evidence and next step.
+- `/review` checks studied material through delayed recall and independent application.
+- `/progress` reports matched learning checks where available, delayed recall, independent use, and Anki statistics without treating them as interchangeable.
 - `/history [topic]` tells the story behind an idea from Wikipedia: the problem or experiment that led to it, the people, and their teachers and students.
 - `/btw <question>` asks a side question without derailing the session.
 
@@ -239,9 +244,9 @@ Pi still handles clipboard paste and image reading. PILearn's small `pilearn-cli
       └── chapters/<chNN>/        level 3, chapter: a chapter-reader writes digest.md here
 ```
 
-Each level has an `AGENTS.md` that tells the model its role. Each level reads only the summaries the level below wrote.
+Each level has an `AGENTS.md` that tells the model its role. Tutors start from summaries and can reopen original material and solutions for checking.
 
-PILearn stays inside your study folder. It teaches from your book and its own training, and cites printed page numbers so you can check any claim. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
+PILearn stays inside your study folder. It teaches from course materials and can add prerequisite explanations, analogies, and examples from its own knowledge. Source claims cite printed pages; teaching additions and unverified reasoning aren't passed off as source content. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
 
 - Writing is allowed only inside the workspace, `~/study`.
 - Reading is allowed in the workspace, in each course's linked books, which live elsewhere, in PILearn's config except the files that hold credentials, and in the system temporary directory for screenshots and pasted clipboard images.
@@ -251,7 +256,7 @@ The only internet access is Wikipedia and Wikidata, for `/history`. The guard li
 
 Repo layout:
 
-- `agent/` is installed into `~/.pilearn/agent`. It has the theme, the `chapter-reader` subagent, skills (`pilearn-tutor`, `add-course`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`, `pilearn-clipboard`), prompts, and templates.
+- `agent/` is installed into `~/.pilearn/agent`. It has the `chapter-reader` subagent, skills (`pilearn-tutor`, `add-course`, `historical-context`, `eli5`, `session-search`, `unslop`), extensions (`pilearn-header`, `pilearn-scaffold`, `pilearn-anki`, `pilearn-go`, `pilearn-reader-model`, `pilearn-guard`, `pilearn-wiki`, `pilearn-date`, `pilearn-clipboard`), prompts, and templates.
 - `bin/pilearn.js` is the launcher.
 - `seeds/` has the first-install settings, models, auth, and keybindings, with no secrets.
 - `install.mjs` is the installer for all platforms. `install.sh` runs it on macOS and Linux.

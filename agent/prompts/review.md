@@ -1,4 +1,4 @@
 ---
-description: Review session with recall only, across the chapters studied so far
+description: Review studied material through delayed recall and independent application
 ---
-Run a PILearn review session for this course, with no new material. Ask 5 to 8 recall questions across every chapter studied so far, one per exchange, and wait for my answer each time. Take `miss` and `partial` items from the recall log first, then older chapters, mixed rather than grouped by chapter. Grade each answer against the chapter digests with a page reference. Then send cards for new misses with `pilearn_anki`, write `sessions/YYYY-MM-DD-review.md`, and append to `progress.md` as the `pilearn-tutor` skill describes.
+Run a PILearn review session for this course using the `pilearn-tutor` skill, with no new block. Choose a short mix of delayed recall and independent application from studied material. Prioritize unresolved weaknesses and older topics using their latest independent results, not every historical miss. Ask one focused question at a time and wait for my answer. Teach missing prerequisites when needed and record that help separately. Follow the skill's rules for feedback, cards, and records; don't create cards from an old cold pre-test miss alone.

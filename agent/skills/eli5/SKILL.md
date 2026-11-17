@@ -1,11 +1,12 @@
 ---
 name: eli5
-description: Explain a concept from the current course in plain language, with one concrete analogy, based on the book. Use when the learner is stuck, asks for a simpler explanation, or says "ELI5".
+description: Explain a current course concept in plain language with a concrete example or analogy. Use when the learner is stuck, asks for a simpler explanation, or says "ELI5".
 ---
 
 # ELI5
 
-1. If the learner hasn't tried yet, ask what they already understand about the concept and where it stops making sense.
-2. Take the definition or statement from the chapter's `digest.md`, with its page. The plain version must say the same thing as the book, only simpler. It never claims something the book doesn't.
-3. Explain in short sentences. Give the idea in one sentence, then one concrete analogy or small example, then the book's exact wording with LaTeX for any math, and show how the plain version matches it.
-4. End with one recall question the learner answers in their own words.
+Use the adaptive teaching rules in the shared `AGENTS.md`. Start from what the learner has already said. If the obstacle is unclear, ask one specific question; otherwise explain directly, including missing prerequisites.
+
+Take the source definition or statement from the unit's `digest.md`, with its page. Explain the idea in short sentences, then use one concrete example or analogy. You may create a teaching example, but distinguish it from the source and state where an analogy stops matching the mathematics. Connect the plain explanation back to the precise statement and its conditions, using LaTeX for math.
+
+When useful, ask the learner to make a prediction or explain the key distinction in their own words. A local clarification doesn't need another quiz. If they remain stuck, change the explanation rather than repeating the question.

@@ -25,7 +25,7 @@ Your working directory is one unit folder, `courses/<course>/chapters/<unit>/`. 
 
 1. The source is the ground truth. You transcribe, you don't write your own content. Every definition, statement, and example traces back to a page. Never fill a gap from what you know, and never simplify a definition beyond what the text says. If the text is unclear, say so.
 2. Stay inside your pages. One reader runs per unit so that no single run has to hold the whole course.
-3. Keep it short, about 2,000 words, or up to about 3,500 for a long unit with many sections. The tutor reads this instead of the PDF for the rest of the course. Make it dense and easy to scan, and exact for definitions and theorem statements.
+3. Keep it short, about 2,000 words, or up to about 3,500 for a long unit with many sections. The tutor starts from this summary and can reopen the source and its solutions for checks. Make definitions and theorem statements exact, including their assumptions. Before finishing, compare each definition, theorem statement, and copied formula with its original page. Mark unreadable or ambiguous passages for source checking rather than guessing.
 4. Don't teach. No dialogue and no grading. Answers to the pre-questions go only in the last section, which the tutor reads and the learner doesn't.
 5. Use the source's own labels. If the source doesn't number a proposition or example, refer to it by page, like "Proposition, p. 129". If you group exercises yourself because the source prints one plain list, say that the grouping is yours.
 6. A lecture transcript is speech, and the board isn't in it. Transcripts from `pilearn videos` are Markdown files with a timestamp like `[12:40]` at the start of each paragraph, and you cite them by those timestamps. When the header says the captions are automatic, there's no punctuation and technical words are sometimes misheard, like "co sign" for cosine. Read through that, and mark anything you can't make sense of instead of guessing. Use the lecture's own order of topics as its sections, with the transcript's pages. Write a formula as LaTeX only when what was said pins it down, and mark it "(from speech)". If a step can't be followed without the board, say so rather than filling it in. Treat notes pages in the same unit as the written record of the same lecture. Take definitions, theorem statements, and formulas from the written parts when they have them, and use the transcript for what was covered, in what order, and how it was motivated.
@@ -53,14 +53,14 @@ Your `AGENTS.md` says which numbering each range uses and whether to add the sou
 
 ### N.1 <section title> (pp. X–Y)
 - Key terms. **Term** (p. X), the definition as written, math in LaTeX
-- Content. The section compressed, each point with its page: theorem statements, key arguments, and how the reasoning is built
+- Content. The section compressed, each point with its page: theorem statements with their assumptions, key arguments, and how the reasoning is built
 - Worked examples. **Example N.M** (p. X), what it shows and its key step, so the tutor can walk through it, or "none"
 - Exercises (p. Z). Problem numbers, grouped the way the source groups them, and what each group practices. No solutions.
 
 ### N.2 …
 
 ## Answer notes (tutor only)
-- A short answer to each pre-question, with its page
+- A short answer to each pre-question, with its page. These are reader-generated notes, not expert solutions. Mark any uncertainty so the tutor can check the original.
 ```
 
 Some books put an exercise set after each section. Others have one set at the end of the chapter. Record every section, including sections without exercises, and give each set's numbering exactly as printed. Lecture notes may have no numbered sections. Then use their own headings, or one row per topic with its pages.

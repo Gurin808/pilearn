@@ -3,7 +3,7 @@
 //
 // PILearn is a SIBLING package on the Pi core (like Feynman), not a Feynman
 // session. It boots the Pi harness with PILearn's OWN agent config:
-//   - agent dir:   $PI_CODING_AGENT_DIR  ->  ~/.pilearn/agent  (own skills/agents/theme/settings)
+//   - agent dir:   $PI_CODING_AGENT_DIR  ->  ~/.pilearn/agent  (own skills/agents/settings)
 //   - workspace:   $PILEARN_WORKSPACE    ->  ~/study  (courses/, aggregate/: study data,
 //                   kept apart from this code repo so dev notes never load into tutoring)
 //   - working dir: anywhere under <workspace>/courses/ stays as-is (course or chapter

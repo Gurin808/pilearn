@@ -7,12 +7,13 @@
 //                    %USERPROFILE%\.pilearn\bin\pilearn.cmd)
 
 import { execFileSync } from "node:child_process";
-import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ensureLatestPi } from "./bin/pi-core.js";
 import { ensureLatestPiPackages } from "./bin/pi-packages.js";
+import { migrateCourseInstructions, migrateSettings } from "./bin/install-config.js";
 
 const win = process.platform === "win32";
 const SRC = dirname(fileURLToPath(import.meta.url));
@@ -37,13 +38,14 @@ execFileSync(win ? "npm.cmd" : "npm", ["install", "--ignore-scripts", "--no-fund
 });
 const PI = ensureLatestPi(SRC);
 
-// 2. Agent config: the repo's agent/ tree always wins (theme, subagents, skills,
-//    extensions, prompts, templates); the shared level map is installed as AGENTS.md.
+// 2. Refresh package-owned resources. Preserve user themes, except the retired
+//    pilearn.json palette. Install the shared teaching rules as AGENTS.md.
 mkdirSync(AGENT, { recursive: true });
 mkdirSync(BIN, { recursive: true });
-for (const d of ["agents", "skills", "extensions", "templates", "themes", "prompts"]) {
+for (const d of ["agents", "skills", "extensions", "templates", "prompts"]) {
   rmSync(join(AGENT, d), { recursive: true, force: true });
 }
+rmSync(join(AGENT, "themes", "pilearn.json"), { force: true });
 cpSync(join(SRC, "agent"), AGENT, { recursive: true });
 cpSync(join(SRC, "agent", "templates", "shared-AGENTS.md"), join(AGENT, "AGENTS.md"));
 
@@ -54,21 +56,18 @@ mkdirSync(dirname(join(AGENT, photon)), { recursive: true });
 rmSync(join(AGENT, photon), { recursive: true, force: true });
 cpSync(join(SRC, photon), join(AGENT, photon), { recursive: true });
 
-// 3. Settings, models, auth, keybindings: seeded only if missing, so local edits
-//    and credentials are never overwritten.
+// 3. Seed missing files. Settings migrations below touch only package-owned entries;
+//    models, auth, and keybindings remain untouched on existing installations.
 for (const f of ["settings.json", "models.json", "auth.json", "keybindings.json"]) {
   if (!existsSync(join(AGENT, f))) cpSync(join(SRC, "seeds", f), join(AGENT, f));
 }
 
-// 3b. PILearn loads only its own skills. Pi also picks up skills from the
-//     shared ~/.agents/skills folder (used by other agent tools); those would
-//     show up in PILearn but sit outside the folders the guard allows.
+// 3b. Retire the PILearn theme and exclude shared skills outside the guard's scope.
 const settingsPath = join(AGENT, "settings.json");
 const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
-const NO_SHARED_SKILLS = "!**/.agents/skills/**";
-if (!(settings.skills ?? []).includes(NO_SHARED_SKILLS)) {
-  settings.skills = [...(settings.skills ?? []), NO_SHARED_SKILLS];
-  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+const migrated = migrateSettings(settings, AGENT);
+if (JSON.stringify(migrated) !== JSON.stringify(settings)) {
+  writeFileSync(settingsPath, JSON.stringify(migrated, null, 2) + "\n");
 }
 
 // 4. Remove old npm version pins and reconcile extension packages in PILearn's
@@ -80,6 +79,15 @@ ensureLatestPiPackages(AGENT, PI);
 mkdirSync(join(WORKSPACE, "courses"), { recursive: true });
 mkdirSync(join(WORKSPACE, "aggregate"), { recursive: true });
 cpSync(join(SRC, "agent", "templates", "level1-AGENTS.md"), join(WORKSPACE, "AGENTS.md"));
+// Migrate known course-level wording without regenerating personalized instructions.
+for (const course of readdirSync(join(WORKSPACE, "courses"), { withFileTypes: true })) {
+  if (!course.isDirectory()) continue;
+  const path = join(WORKSPACE, "courses", course.name, "AGENTS.md");
+  if (!existsSync(path)) continue;
+  const before = readFileSync(path, "utf8");
+  const after = migrateCourseInstructions(before);
+  if (after !== before) writeFileSync(path, after);
+}
 
 // 6. Launcher
 const launcherJs = join(SRC, "bin", "pilearn.js");

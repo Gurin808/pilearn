@@ -6,35 +6,35 @@ Every design choice traces to evidence, a paper from the reading list or another
 
 ## Goal
 
-A learning tool on Pi: an AI tutor that works from a book, paper, or course, and installs the way Feynman does, so anyone can set it up. It should be good enough to recommend to students. It is built from the learning-science literature and judged by what the learner can recall, not by how sessions feel.
+A learning tool on Pi that works from books, papers, and courses. Teach for understanding, delayed recall, and independent application. The design draws on learning-science research, but PILearn itself has not been validated against another teacher. Clear explanations and useful difficulty can coexist. Learner frustration informs pacing, not a claim that learning is happening.
 
 ## Principles
 
 | # | Principle | Evidence |
 |---|---|---|
-| P1 | The learner tries before being told. | Deslauriers 2019, where the manipulation was trying first versus being shown the solution. The pretesting effect, Kornell, Hays & Bjork 2009. |
-| P2 | Free recall before multiple choice. Recognizing is too easy, and recalling is where learning happens. | Testing-effect literature, Roediger & Karpicke 2006. Desirable difficulties, Bjork & Bjork 2011. |
-| P3 | Pre-questions before each chunk, written from that chunk. | Pan & Carpenter 2023, *Educ. Psychol. Rev.* 35:97. |
-| P4 | Tools and structure enforce the sequence, not the prompt alone, because models drift on problems with many parts. | Kestin 2025: a system prompt alone wasn't enough, so the platform guided students step by step. |
-| P5 | The tutor never produces the ground truth. The book text and expert solutions are given to it. | Kestin 2025: 83% rated explanations at least as good as a human's because the prompts carried expert answers. |
-| P6 | Quick feedback and self-pacing are what classrooms can't scale, and what the tool does well. | Kestin 2025, best practices (vi) and (vii). |
-| P7 | Judge the tool by retention over time, never by how a session felt. | Deslauriers 2019: for novices, the feeling of learning runs against actual learning. |
-| P8 | Unguided chat is the failure mode. Structure is what makes it work. | Kestin 2025, citing Krupp 2023 and Forero 2023. |
-| P9 | Assess early and make the result visible. | Deslauriers 2019, Discussion. |
-| P10 | Subagents run async, so the learner sees their progress while working. pi-subagents' progress widget does this. | The author's earlier Pi setup, observed 2026-09-21. |
-| P11 | Anki handles recall of single items, like definitions, steps, and equations. Synthesis stays in tutor sessions. Measure retention, never cards reviewed. Cap new cards per session. | Roediger & Karpicke 2006; Roediger & Butler 2011; Bjork & Bjork 2011. |
-| P12 | Sessions are interactive and constructive in ICAP's sense, delivered in a guided sequence with worked examples. Never unguided discovery. | Chi & Wylie 2014; Kirschner, Sweller & Clark 2006; Kestin 2025. |
-| P13 | Test, don't re-present. Once an item is recalled, more study adds little and more testing drives retention, so the tool asks instead of rereading. | Karpicke & Roediger 2008; Roediger & Karpicke 2006; Roediger & Butler 2011. |
-| P14 | Spacing, interleaving, and varied practice go into the review schedule. They feel harder now and last longer. Evaluate long-term retention, never immediate performance. | Bjork & Bjork 2011. Extends P7. |
-| P15 | Understanding is the goal and hard problems are the means. The aim is the bigger picture: connections, several views of one problem, and being able to explain it. Speed at calculation isn't the aim. Hard problems are chosen for the idea they train. The exception is a field's basic moves, which need fluency because fluency frees attention. Exercises are done by hand, chosen on purpose, weighted toward what the learner struggled with, and sized by a per-course `practice` setting, `foundational` or `conceptual`. | The author's view, consistent with Bjork & Bjork 2011; Kapur 2008, 2016; Sinha & Kapur 2021; Chi et al. 1989; Rittle-Johnson, Schneider & Star 2015; Bastani et al. 2025. |
+| P1 | Invite attempts when the learner can reason meaningfully. Teach unfamiliar ideas and missing prerequisites directly, then ask for use. | Deslauriers 2019; Kornell, Hays & Bjork 2009; guidance from Kirschner, Sweller & Clark 2006 and Renkl & Atkinson 2003. The branching policy is a design judgment. |
+| P2 | Use recall and explanation to check studied material; recognition can diagnose a specific confusion. | Roediger & Karpicke 2006; Bjork & Bjork 2011. No claim that recognition never helps. |
+| P3 | Use brief pre-questions when useful, not before every block regardless of background. | Pan & Carpenter 2023. The frequency is a design choice, not an established optimum. |
+| P4 | Prompts guide an adaptive flow. Tools enforce file boundaries and the per-call card cap, not lesson order. | Kestin 2025 used a platform-enforced sequence. PILearn does not reproduce that safeguard. |
+| P5 | Check source statements and available expert solutions. Label teaching additions and tutor reasoning. Treat digests as generated summaries. | Kestin 2025 supplied expert-written answers. A digest alone is not equivalent, and PILearn lacks a complete expert answer set. |
+| P6 | Give targeted feedback and adapt pace to the learner. | Kestin 2025, best practices vi and vii. Effectiveness in PILearn remains unmeasured. |
+| P7 | Assess delayed recall, independent application, and transfer. Feelings inform pacing rather than establish learning. | Deslauriers 2019 shows feelings can mislead, not that poor flow improves learning. The broader assessment policy follows the stated goal. |
+| P8 | Keep learning goals and records without forcing every activity into every session. | Kestin 2025 supports structured tutoring in its setting. PILearn's flexible flow is a design judgment requiring evaluation. |
+| P9 | Make assessment evidence and its limits visible. Compare matched items and state support and denominators. | Deslauriers 2019 recommends early assessment. Matching and explicit support are measurement safeguards, not a validated PILearn instrument. |
+| P10 | Prepare units with async chapter-reader subagents. | Engineering choice based on the author's workflow, not learning-outcome evidence. |
+| P11 | Use Anki for selected lasting weaknesses after teaching or later retrieval. Keep synthesis and independent problems in sessions. | Retrieval research supports the practice; card selection, workload, and the cap of 8 per call are design choices. |
+| P12 | Combine explanations, worked examples, learner reasoning, and reduced help as competence grows. | Chi & Wylie 2014; Kirschner, Sweller & Clark 2006; Renkl & Atkinson 2003. |
+| P13 | Revisit studied knowledge through retrieval, and reteach when responses show a missing concept. | Karpicke & Roediger 2008; Roediger & Karpicke 2006; Roediger & Butler 2011. Retrieval evidence is not a universal ban on explanation. |
+| P14 | Mix older topics and unresolved weaknesses using the latest independent evidence and time since practice. Anki schedules atomic cards; session review remains tutor-selected. | Bjork & Bjork 2011 supports spacing and varied practice. The topic-selection policy is a design judgment, not an implemented optimal scheduler. |
+| P15 | Choose problems for understanding and fluency, including challenge when ready. Practice settings guide load, not a compulsory minimum. | The author's goal, informed by Kapur 2008, 2016; Sinha & Kapur 2021; Chi et al. 1989; Rittle-Johnson, Schneider & Star 2015. |
 
 ## How it's built now
 
 ```
 ~/study/                       level 1: adds books, plans across courses
 └── courses/<course>/          level 2: the tutor for one book
-      ├── course.json          id, title, source, pageOffset, practice, solutions
-      ├── source.pdf           link to the book
+      ├── course.json          source ids, page offsets, practice guide, solutions
+      ├── sources/             linked books and imported course files
       ├── progress.md          sessions, exercises, recall log, next block
       ├── sessions/            one log per session
       └── chapters/<chNN>/     level 3: a chapter-reader writes digest.md here
@@ -42,27 +42,28 @@ A learning tool on Pi: an AI tutor that works from a book, paper, or course, and
 
 - Each level has its own `AGENTS.md`. Pi loads all of them from the workspace root down, and the deepest one sets the role. A shared `AGENTS.md` in the agent dir holds the five teaching rules that apply in every answer.
 - The `chapter-reader` subagent reads one chapter's pages and writes a digest organized by section, with math taken from page images as LaTeX. No single context ever holds the whole book.
-- The tutor reads the whole chapter digest every session but teaches a block of about 1 to 4 sections. The session has eight steps: orient, warm-up, pre-test, read, recall and post-test, practice, cards, log.
-- Tools do what the prompt can't guarantee. `pilearn_scaffold` creates folders, `pilearn_anki` caps cards at 8 per session, `pilearn-guard` keeps file access inside the workspace, `pilearn_wiki` is the only network access, limited to Wikipedia and Wikidata, and `pilearn-date` gives the model the date. `bash` is off.
+- The tutor reads the needed digests and teaches a manageable block, usually 1 to 4 sections or a row of `plan.md`. The default flow is reconnect, learn, check and apply, then close. It combines or omits redundant checks and logs unfinished coverage honestly.
+- `pilearn_scaffold` creates folders, `pilearn_anki` caps cards at 8 per call, and `pilearn-guard` restricts tool access. `pilearn_wiki` limits web lookups to Wikipedia and Wikidata for history; `pilearn-date` supplies the date. The model has no shell tool. No tool enforces the teaching sequence or checks the correctness of feedback.
+- PILearn uses Pi's default terminal theme. Installation removes only the retired PILearn palette and its settings entries, preserving other user themes and preferences.
 - `/go` moves between levels, `/reader-model` picks the model that reads PDFs, and `/history` tells the story behind an idea.
 
 ## Questions and cards
 
-- Questions ask for free recall first, like "state the mechanism in your own words". Multiple choice only appears to tell two easily confused ideas apart. The target is questions the learner can almost answer.
-- Each Anki card holds one item and asks for recall, with "explain why X", "derive Y", or "compare A and B", never recognition or trivia.
-- New cards come only from what the learner got wrong or recalled weakly that session. That keeps the deck small.
-- At most 8 new cards per session. Anki's own "new cards per day" limit handles daily load.
-- The measure is retention and the longest interval recalled, never cards reviewed or streaks.
+- Questions state their own setup and test a useful target. Explanations and prerequisite teaching are available without an obligatory guessing round.
+- Each card tests one lasting idea with a self-contained front and a checked source citation. Proposition numbers belong in citations, not as the only way to identify the question.
+- Choose cards for important weaknesses after instruction or on delayed retrieval. A cold miss alone is insufficient; none is a valid outcome. Consolidate into one creation call per block, a tutor instruction rather than a tool-enforced limit.
+- The tool caps each call at 8 cards. Anki's new-cards/day setting controls daily intake.
+- Card retention and interval statistics describe that deck, not independent understanding or transfer.
 
 ## Evaluation
 
-Each block gets a pre-test and a post-test with the same questions. Warm-ups and `/review` measure recall later, grouped by time since study. Anki reports retention over 30 days. `/progress` shows all three. There is no comparison with the old multiple-choice setup, which no longer exists, and no feel ratings, which nobody used.
+When pre/post checks are used, compare matched items with comparable difficulty, stated denominators, and explicit support. Keep extra diagnostic questions separate. Preserve unmatched older totals but don't turn them into gains. Each session log records task type, prompt, result, support as independent, hinted, or modeled, and feedback basis as source pages or tutor reasoning. Delayed recall, independent application, and changed-context transfer supply different evidence. Anki reports card-review statistics. `/progress` reads relevant session logs as well as `progress.md` to distinguish them. None of this establishes causation or superiority over another teacher.
 
 ## Open questions
 
-- How much checking of the digests is enough? The first 14 were spot-checked against page images.
+- How reliable are generated digests and tutor feedback? New readers must compare definitions, theorem statements, and formulas with original pages, but old digests have not been re-audited by this change.
+- Does the adaptive policy improve delayed independent performance? Instruction checks and software tests cannot answer this; learner outcomes need evaluation over time.
 - Windows support hasn't been tested on a Windows machine.
-- How big a subagent budget per session is worth it before it slows the loop?
 
 ## Decision log (append-only)
 
@@ -108,3 +109,4 @@ Each block gets a pre-test and a post-test with the same questions. Warm-ups and
 - **2026-09-27 · Lectures from YouTube and any course folder.** Courses aren't tied to OCW anymore. `pilearn videos <links> --out <folder>` runs yt-dlp to list a playlist or videos and fetch their captions. It prefers captions made by the uploader, then automatic ones. YouTube's automatic captions roll, so each cue repeats the last line; keeping a line only when it differs from the previous one removes the repeats. The result is one Markdown transcript per video, with a timestamp opening each paragraph of about a minute and chapter headings where the video has them, plus `index.md` and `pilearn-videos.json`. Tested on Simon's Oxford solid state lectures: automatic captions, about 7,800 words per 45-minute lecture. The learner runs the command, not the model, so sessions stay offline, like the OCW decision. Scaffold level `folder` copies any local folder of PDFs, Markdown, and text into `materials/<id>/` with its structure kept. The author pointed out that the model can make sense of a folder itself with `ls`, `find`, and `read`, so the tool only copies it, since the guard keeps the model inside the workspace, and writes titles for `pilearn videos` transcripts. OCW keeps its own importer, because its files are named by hash and described only in 300 or so `data.json` files. A unit part can now be a whole transcript or text file, with no pages, and is cited by timestamp. The tutor can link a cited moment with `&t=<seconds>s`.
 - **2026-09-27 · Shorter source ids.** Sources added by path took their ids from file names, so digests cited `mit18-06scf11-ses1-1sum p. 2` or a transcript's YouTube id like `j7dzl2-na80-1`. OCW files now lose their course prefix (`ses1-1sum`), a transcript is named after the unit it first belongs to (`lec1-01-transcript`), and a taken id gets `-2` instead of an error. Courses built before this keep their ids.
 - **2026-09-27 · Cards follow misses, not a quota.** The author pointed out that a fixed card number makes no sense when a sitting can hold one lecture or three. Cards belong to a study block, and a block in a lecture course is one lecture, so a three-lecture sitting already makes cards three times. But "0 to 8 per session" still read like a quota. The skill now says the number follows the misses: none when nothing important was missed, one per miss worth remembering a year from now. In `conceptual` courses the cards are mostly why-questions and connections, plus definitions whose wording matters, and no calculation steps. The tool's limit of 8 per call stays, as a safety limit against a runaway call, not a target. Daily load belongs in Anki's own "new cards per day" setting, which fits the learner's time rather than the number of lectures.
+- **2026-11-17 · Adaptive teaching and theme retirement.** The author approved a review comparing active PILearn and Feynman sessions. Replaced universal attempt-first rules and the compulsory eight-step script with decisions based on missing prerequisites, retrieval, and independent reasoning. Added direct clarification, bounded hinting, labeled teaching additions, source-solution checks, and independent application. Assessment separates correctness from help, compares only matched pre/post items, and uses the latest independent evidence for review selection. Cards target weaknesses after teaching or later retrieval, not cold misses alone. Prompts, ELI5, templates, README, and the current principles above now agree. Earlier log entries remain historical, including claims about enforced step order and caps that were inaccurate. PILearn has no lesson-state controller and generated digests are not expert answer keys. The custom theme is retired in favor of Pi's default; installer migrations preserve other preferences and course-specific instructions. These changes are design judgments informed by the cited literature, not demonstrated learning improvements.
