@@ -96,6 +96,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Obsidian LaTeX Suite
+
+PILearn adapts the default snippets, snippet variables, and macro list from [Obsidian LaTeX Suite](https://github.com/artisticat1/obsidian-latex-suite/tree/734110a4cee5ced5d253395ff2e31703a608eb21). The upstream MIT notice is included in [the vendored directory](agent/extensions/pilearn-latex/vendor/LICENSE.md).
+
 ## pstack (unslop skill)
 
 Source: https://github.com/cursor/plugins/tree/main/pstack

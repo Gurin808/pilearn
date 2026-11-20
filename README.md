@@ -210,6 +210,12 @@ Inside a course, at level 2:
 
 `pilearn --course <id>` starts directly in a course. Keep Anki open while you study. Cards go to the deck `PILearn::<course>`.
 
+### Type LaTeX in the terminal
+
+Type `mk` then **Tab** to start inline math, or `dm` then **Tab** to start a display block. Inside math, PILearn uses the [Obsidian LaTeX Suite defaults](https://github.com/artisticat1/obsidian-latex-suite/blob/734110a4cee5ced5d253395ff2e31703a608eb21/src/default_snippets.js). Try `@t` for `\theta`, `xsr` for `x^{2}`, `//` for a fraction template, or `pmat` for a matrix. `x/y` followed by Tab makes a fraction. Tab expands manual snippets and advances through placeholders; typing in a new placeholder replaces its default text. For a visual snippet, hold Shift and move left or right to mark a range in math, then type its trigger, such as `S` to wrap it in a square root.
+
+Automatic expansions stay inside dollar-delimited math, outside code and prose. Escape a literal dollar as `\$`. Paste is left as typed. The snippet catalog is adapted for Pi's editor; Obsidian's preview, concealment, and plugin settings do not carry over. No WezTerm configuration is needed.
+
 ### Submit handwritten solutions
 
 You can send screenshots of proofs or solutions instead of typing them out. Choose a chat model that accepts images with `/model`; the separate `/reader-model` setting is for preparing course digests.
