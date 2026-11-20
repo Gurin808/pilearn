@@ -46,7 +46,7 @@ PILearn applies findings from cognitive and educational psychology. Each choice 
 | Conceptual and procedural knowledge | The two grow together and support each other (Rittle-Johnson, Schneider & Star, 2015). | `foundational` and `conceptual` practice settings guide workload rather than set a minimum. Guided plans and independent solutions are recorded separately. |
 | Feeling ≠ learning | See Deslauriers et al. (2019) above. | Delayed recall, independent application, and transfer supply evidence. Frustration and fatigue inform pacing, not grades. |
 | Structure and source checking | See Kestin et al. (2025) and Bastani et al. (2025) above. | Prompts guide sessions; tools do not enforce lesson order. The tutor checks difficult feedback against available solutions and distinguishes its own reasoning from source-checked work. |
-| Context, not decoration | Interesting details that don't serve the idea, "seductive details", can hurt learning (Harp & Mayer, 1998). | `/history` tells the problem or experiment behind an idea and the people involved, only when you ask, and always leads back to the idea. |
+| Context, not decoration | Interesting details that don't serve the idea, "seductive details", can hurt learning (Harp & Mayer, 1998). | The tutor tells a short story when the problem or experiment behind an idea helps explain it. Use `/history` for the longer account. |
 
 The teacher chooses between explanation, a worked example, retrieval, and independent practice based on your responses. It uses your existing attempt instead of asking you to repeat it, and teaches a missing step when hints stop helping. Extra analogies, prerequisite explanations, and teaching examples are allowed, with their origin made clear and no invented source citations.
 
@@ -205,7 +205,7 @@ Inside a course, at level 2:
 - `/study [chapter or sections]` runs an adaptive session with reading or guided explanation, useful checks, and independent practice. It skips redundant activities and logs the evidence and next step.
 - `/review` checks studied material through delayed recall and independent application.
 - `/progress` reports matched learning checks where available, delayed recall, independent use, and Anki statistics without treating them as interchangeable.
-- `/history [topic]` tells the story behind an idea from Wikipedia: the problem or experiment that led to it, the people, and their teachers and students.
+- `/history [topic]` gives a fuller account of the problem or experiment behind an idea. It starts with the course sources and uses Wikipedia and Wikidata as needed.
 - `/btw <question>` asks a side question without derailing the session.
 
 `pilearn --course <id>` starts directly in a course. Keep Anki open while you study. Cards go to the deck `PILearn::<course>`.
@@ -252,7 +252,7 @@ PILearn stays inside your study folder. It teaches from course materials and can
 - Reading is allowed in the workspace, in each course's linked books, which live elsewhere, in PILearn's config except the files that hold credentials, and in the system temporary directory for screenshots and pasted clipboard images.
 - Subagents can only start inside the workspace.
 
-The only internet access is Wikipedia and Wikidata, for `/history`. The guard limits what the model's tools can do. It is not an operating-system sandbox, and your own `!command` shell in PILearn works as usual.
+The only internet access is Wikipedia and Wikidata, for historical context in lessons and `/history`. The guard limits what the model's tools can do. It is not an operating-system sandbox, and your own `!command` shell in PILearn works as usual.
 
 Repo layout:
 
