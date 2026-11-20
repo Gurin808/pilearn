@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { KeybindingsManager, TUI_KEYBINDINGS } from "@earendil-works/pi-tui";
+import { KeybindingsManager, TUI_KEYBINDINGS, visibleWidth } from "@earendil-works/pi-tui";
 import latexExtension, { LatexEditor } from "../agent/extensions/pilearn-latex/index.ts";
 import { findExpansion, mathContext } from "../agent/extensions/pilearn-latex/snippets.ts";
+import { LatexReference, searchSnippets } from "../agent/extensions/pilearn-latex/reference.ts";
 
 const editor = () => new LatexEditor({ requestRender() {} }, { borderColor: (s) => s, selectList: {} }, new KeybindingsManager(TUI_KEYBINDINGS));
 const type = (input, text) => { for (const char of text) input.handleInput(char); };
@@ -79,7 +80,11 @@ test("pastes and ordinary input remain unexpanded", () => {
 
 test("the extension only installs in the terminal and leaves other editors alone", () => {
   let sessionStart;
-  latexExtension({ on(name, listener) { if (name === "session_start") sessionStart = listener; } });
+  latexExtension({
+    registerCommand() {},
+    registerShortcut() {},
+    on(name, listener) { if (name === "session_start") sessionStart = listener; },
+  });
   let installed = 0;
   const ui = { getEditorComponent: () => undefined, setEditorComponent: () => installed++ };
   sessionStart({}, { mode: "rpc", ui });
@@ -87,4 +92,34 @@ test("the extension only installs in the terminal and leaves other editors alone
   assert.equal(installed, 0);
   sessionStart({}, { mode: "tui", ui });
   assert.equal(installed, 1);
+});
+
+test("shortcut search finds triggers, LaTeX commands, and descriptions", () => {
+  assert.equal(searchSnippets("mk")[0].key, "Tab");
+  assert.equal(searchSnippets("dm")[0].replacement, "$$\n$0\n$$");
+  assert.ok(searchSnippets("THETA").some((entry) => entry.trigger === "@t"));
+  assert.equal(searchSnippets("square root")[0].trigger, "sq");
+  assert.ok(searchSnippets("pmat").some((entry) => entry.mode === "Display math"));
+  assert.ok(searchSnippets("fraction Tab").some((entry) => entry.trigger === "x/y"));
+  assert.deepEqual(searchSnippets("not a real snippet"), []);
+});
+
+test("reference overlay filters, supports reset and cancel, and stays within its width", () => {
+  let closed = false;
+  const overlay = new LatexReference(
+    { terminal: { rows: 24 }, requestRender() {} },
+    { fg: (_, text) => text },
+    new KeybindingsManager(TUI_KEYBINDINGS),
+    () => { closed = true; },
+    "theta",
+  );
+  overlay.focused = true;
+  assert.match(overlay.render(60).join("\n"), /@t.*Greek letter/);
+  assert.match(overlay.render(60).join("\n"), /\\theta/);
+  assert.ok(overlay.render(24).every((line) => visibleWidth(line) <= 24));
+  overlay.handleInput("\x06");
+  type(overlay, "zzzz");
+  assert.match(overlay.render(60).join("\n"), /No matching snippets/);
+  overlay.handleInput("\x1b");
+  assert.ok(closed);
 });

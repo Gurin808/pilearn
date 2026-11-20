@@ -212,6 +212,8 @@ Inside a course, at level 2:
 
 ### Type LaTeX in the terminal
 
+Run `/latexsuite` for the searchable shortcut reference, or `/latexsuite theta` to open it with a search already filled in. Type to filter by shortcut, LaTeX command, or description. Use the arrow keys to browse, Ctrl+F to clear the search, and Esc to close. Press Ctrl+Alt+L to open it without clearing a draft already in the editor.
+
 Type `mk` then **Tab** to start inline math, or `dm` then **Tab** to start a display block. Inside math, PILearn uses the [Obsidian LaTeX Suite defaults](https://github.com/artisticat1/obsidian-latex-suite/blob/734110a4cee5ced5d253395ff2e31703a608eb21/src/default_snippets.js). Try `@t` for `\theta`, `xsr` for `x^{2}`, `//` for a fraction template, or `pmat` for a matrix. `x/y` followed by Tab makes a fraction. Tab expands manual snippets and advances through placeholders; typing in a new placeholder replaces its default text. For a visual snippet, hold Shift and move left or right to mark a range in math, then type its trigger, such as `S` to wrap it in a square root.
 
 Automatic expansions stay inside dollar-delimited math, outside code and prose. Escape a literal dollar as `\$`. Paste is left as typed. The snippet catalog is adapted for Pi's editor; Obsidian's preview, concealment, and plugin settings do not carry over. No WezTerm configuration is needed.

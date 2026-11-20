@@ -1,6 +1,7 @@
 import { CustomEditor, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { decodeKittyPrintable, isKeyRelease, matchesKey } from "@earendil-works/pi-tui";
 import { findExpansion, mathContext, visualExpansion, type Expansion, type Stop } from "./snippets.ts";
+import { openLatexReference } from "./reference.ts";
 
 type Frame = { stops: Stop[]; ids: number[]; index: number; fresh: boolean };
 const active = (frame: Frame) => frame.stops.find((stop) => stop.id === frame.ids[frame.index]);
@@ -163,6 +164,14 @@ export class LatexEditor extends CustomEditor {
 }
 
 export default function latexExtension(pi: ExtensionAPI) {
+  pi.registerCommand("latexsuite", {
+    description: "Search the LaTeX shortcut reference",
+    handler: (args, ctx) => openLatexReference(ctx, args),
+  });
+  pi.registerShortcut("ctrl+alt+l", {
+    description: "Search LaTeX shortcuts without leaving the draft",
+    handler: (ctx) => openLatexReference(ctx),
+  });
   pi.on("session_start", (_event, ctx) => {
     if (ctx.mode !== "tui" || ctx.ui.getEditorComponent?.()) return;
     ctx.ui.setEditorComponent((tui, theme, keybindings) => new LatexEditor(tui, theme, keybindings));

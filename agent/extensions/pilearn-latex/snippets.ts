@@ -11,6 +11,7 @@ type Snippet = {
   replacement: string | ((match: RegExpMatchArray) => string | false);
   options: string;
   priority?: number;
+  description?: string;
   excludedMacros?: string[];
 };
 
@@ -25,6 +26,58 @@ const snippets = (defaults as Snippet[]).map((snippet) => {
   const pattern = literal ? escapeRegex(source) : source.replace(/\$\{\w+\}/g, (name) => variables[name] ?? name);
   return { ...snippet, source, visual, pattern: new RegExp(`(?:${pattern})(?![\\s\\S])`, typeof trigger === "string" ? "" : trigger.flags) };
 });
+
+export type SnippetReference = {
+  trigger: string;
+  mode: string;
+  key: string;
+  description: string;
+  replacement: string;
+  pattern?: string;
+};
+
+const shorthand: Record<string, string> = {
+  mk: "Inline math",
+  dm: "Display math",
+  sq: "Square root",
+  sr: "Square or superscript 2",
+  cb: "Cube or superscript 3",
+  "//": "Fraction template",
+  par: "Partial derivative",
+  brk: "Bra-ket or inner product",
+  outer: "Outer product",
+};
+
+const regexExamples: Record<string, string> = {
+  "([a-zA-Z])hat": "xhat",
+  "([a-zA-Z])bar": "xbar",
+  "([a-zA-Z])dot": "xdot",
+  "([a-zA-Z])ddot": "xddot",
+  "([a-zA-Z])vec": "xvec",
+  "([a-zA-Z])tilde": "xtilde",
+  "([pbBvV]mat)": "pmat / bmat / Bmat / vmat / Vmat",
+  "(matrix|cases|array)": "matrix / cases / array",
+  "(matrix|cases|align|array)": "matrix / cases / align / array",
+  "iden(\\d)": "iden2",
+  "par([0-9])": "par2",
+  "pa([A-Za-z])([A-Za-z])": "pafy",
+  "(\\d)rt": "3rt",
+};
+
+export const snippetReference: readonly SnippetReference[] = [
+  ...snippets.map(({ source, trigger, options, replacement, description }) => {
+    const regex = trigger instanceof RegExp || options.includes("r");
+    return {
+      trigger: regex && regexExamples[source] ? regexExamples[source] : source,
+      mode: options.includes("m") ? "Math" : options.includes("M") ? "Display math" : options.includes("n") ? "Inline math" : "Prose",
+      key: options.includes("v") ? "Select then type" : options.includes("A") ? "Automatic" : "Tab",
+      description: description ?? shorthand[source] ?? (/^[@:]/.test(source) ? "Greek letter" : ""),
+      replacement: typeof replacement === "string" ? replacement : "Computed from what you type",
+      pattern: regex ? source : undefined,
+    };
+  }),
+  { trigger: "x/y", mode: "Math", key: "Tab", description: "Turn two operands into a fraction", replacement: "\\frac{x}{y}" },
+];
 
 function escaped(text: string, index: number) {
   let from = index;
