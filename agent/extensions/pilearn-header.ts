@@ -193,7 +193,7 @@ function detectSystemResources(): { cores: number; ramTotal: string } {
   return cachedResources;
 }
 
-type ChapterNode = { id: string; prepared: boolean; studied: boolean };
+type ChapterNode = { id: string; prepared: boolean };
 type CourseNode = { id: string; title?: string; chapters: ChapterNode[] };
 type StudyTree = { root: string; courses: CourseNode[]; course?: string; chapter?: string };
 
@@ -210,67 +210,6 @@ async function subdirs(dir: string): Promise<string[]> {
   }
 }
 
-type SectionNum = [number, number];
-
-function parseSection(text: string): SectionNum | undefined {
-  const m = text.trim().match(/^(\d+)\.(\d+)$/);
-  return m ? [Number(m[1]), Number(m[2])] : undefined;
-}
-
-function compareSections(a: SectionNum, b: SectionNum): number {
-  return a[0] - b[0] || a[1] - b[1];
-}
-
-/** Rows of the markdown table under `## <heading>`, as trimmed cell arrays (header and divider skipped). */
-function tableRows(markdown: string, heading: string): string[][] {
-  const start = markdown.search(new RegExp(`^##\\s+${heading}\\s*$`, "m"));
-  if (start < 0) return [];
-  const rows: string[][] = [];
-  for (const line of markdown.slice(start).split("\n").slice(1)) {
-    if (/^##\s/.test(line)) break;
-    if (!line.trim().startsWith("|")) continue;
-    const cells = line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
-    if (cells.every((c) => /^:?-+:?$/.test(c))) continue;
-    rows.push(cells);
-  }
-  return rows.slice(1);
-}
-
-/** Numbered sections (e.g. 1.1 … 1.10) from a digest's *Sections* table; `(intro)` rows are skipped. */
-function digestSections(digest: string): SectionNum[] {
-  return tableRows(digest, "Sections").flatMap((cells) => {
-    const s = parseSection(cells[0] ?? "");
-    return s ? [s] : [];
-  });
-}
-
-/**
- * Sections covered by the *Sessions* table of `progress.md`. The Sections column holds
- * entries like `1.1–1.4`, `1.9`, `1.5-1.8, 2.1`, `3.6 and 3.7`, or `4.1 to 4.5`;
- * a bare unit id like `ch03` or `ps3` marks the whole unit.
- */
-function coveredSections(progress: string): { has: (s: SectionNum) => boolean; chapters: Set<string> } {
-  const ranges: [SectionNum, SectionNum][] = [];
-  const chapters = new Set<string>();
-  for (const cells of tableRows(progress, "Sessions")) {
-    for (const part of (cells[1] ?? "").split(/[,;]|\band\b/i)) {
-      const ch = part.trim().match(/^([a-z][a-z0-9-]*)$/i);
-      if (ch) {
-        chapters.add(ch[1]!.toLowerCase());
-        continue;
-      }
-      const [from, to = from] = part.split(/\s*(?:[–—-]|\bto\b)\s*/i);
-      const a = parseSection(from ?? "");
-      const b = parseSection(to ?? "");
-      if (a && b) ranges.push([a, b]);
-    }
-  }
-  return {
-    has: (s) => ranges.some(([a, b]) => compareSections(a, s) <= 0 && compareSections(s, b) <= 0),
-    chapters,
-  };
-}
-
 export async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
   const ws = workspaceDir();
   if (!existsSync(ws)) return null;
@@ -282,24 +221,10 @@ export async function buildStudyTree(cwd: string): Promise<StudyTree | null> {
   const courses: CourseNode[] = [];
   for (const id of await subdirs(join(ws, "courses"))) {
     const dir = join(ws, "courses", id);
-    let progress = "";
-    try {
-      progress = await readFile(join(dir, "progress.md"), "utf8");
-    } catch {}
-    const covered = coveredSections(progress);
-    const chapters: ChapterNode[] = [];
-    for (const ch of await subdirs(join(dir, "chapters"))) {
-      let digest: string | undefined;
-      try {
-        digest = await readFile(join(dir, "chapters", ch, "digest.md"), "utf8");
-      } catch {}
-      const sections = digest ? digestSections(digest) : [];
-      chapters.push({
-        id: ch,
-        prepared: digest !== undefined,
-        studied: covered.chapters.has(ch) || (sections.length > 0 && sections.every((s) => covered.has(s))),
-      });
-    }
+    const chapters = (await subdirs(join(dir, "chapters"))).map((id) => ({
+      id,
+      prepared: existsSync(join(dir, "chapters", id, "digest.md")),
+    }));
     let title: string | undefined;
     try {
       title = JSON.parse(await readFile(join(dir, "course.json"), "utf8")).title;
@@ -322,35 +247,23 @@ export function renderStudyTree(tree: StudyTree, theme: Theme): TreeLine[] {
   add("├─ ", "courses/", theme.fg("text", "courses/"));
   tree.courses.forEach((course, ci) => {
     const lastCourse = ci === tree.courses.length - 1;
-    const studied = course.chapters.filter((c) => c.studied).length;
-    const count = course.chapters.length ? ` ${studied}/${course.chapters.length}` : "";
     const isHere = course.id === tree.course;
-    const name = `${course.id}/`;
-    add(
-      `│  ${lastCourse ? "└─ " : "├─ "}`,
-      `${name}${count}${isHere ? " ◀" : ""}`,
-      (isHere ? here(name) : theme.fg("text", name)) + theme.fg("dim", count) + (isHere ? here(" ◀") : ""),
-    );
+    const label = `${course.id}/${isHere ? " ◀" : ""}`;
+    add(`│  ${lastCourse ? "└─ " : "├─ "}`, label, isHere ? here(label) : theme.fg("text", label));
     if (course.title && course.title !== course.id) add(`│  ${lastCourse ? "   " : "│  "}`, course.title, theme.fg("dim", course.title));
     if (!isHere) return;
     course.chapters.forEach((ch, i) => {
       const branch = `│  ${lastCourse ? "   " : "│  "}${i === course.chapters.length - 1 ? "└─ " : "├─ "}`;
-      const mark = `${ch.studied ? " ✓" : ""}${ch.id === tree.chapter ? " ◀" : ""}`;
-      const body =
-        ch.id === tree.chapter
-          ? here(ch.id)
-          : ch.studied
-            ? theme.fg("success", ch.id)
-            : theme.fg(ch.prepared ? "text" : "dim", ch.id);
-      const markStyled = (ch.studied ? theme.fg("success", " ✓") : "") + (ch.id === tree.chapter ? here(" ◀") : "");
-      add(branch, ch.id + mark, body + markStyled);
+      const isCurrent = ch.id === tree.chapter;
+      const label = `${ch.id}${isCurrent ? " ◀" : ""}`;
+      add(branch, label, isCurrent ? here(label) : theme.fg(ch.prepared ? "text" : "dim", label));
     });
   });
   if (tree.courses.length === 0) add("│  └─ ", "(no courses yet)", theme.fg("dim", "(no courses yet)"));
   add("└─ ", "aggregate/", theme.fg("text", "aggregate/"));
   if (tree.course) {
     lines.push({ plain: "", styled: "" });
-    const legend = "✓ studied · dim: not prepared";
+    const legend = "Dim units have no digest.";
     lines.push({ plain: legend, styled: theme.fg("dim", legend) });
   }
   return lines;
