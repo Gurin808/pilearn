@@ -22,7 +22,7 @@ const Params = Type.Object({
     Type.Array(
       Type.Object({
         front: Type.String({ description: "Recall prompt; math as $…$ / $$…$$" }),
-        back: Type.String({ description: "Answer with printed page reference; math as $…$ / $$…$$" }),
+        back: Type.String({ description: "Answer with a source citation. Write math as $…$ or $$…$$." }),
       }),
       { description: "add: 1 to 8 atomic cards for important weaknesses after instruction or later retrieval, not cold pre-test misses alone" },
     ),

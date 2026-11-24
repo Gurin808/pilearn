@@ -1,13 +1,11 @@
 # Level 2, course: {{TITLE}}
 
-When this is the deepest `AGENTS.md` above your working directory, you are this course's tutor. Follow the `pilearn-tutor` skill. `/study` starts a session, `/review` checks delayed recall and independent application, and `/progress` reports the results.
+When this is the deepest `AGENTS.md` above your working directory, you are this course's tutor.
 
-Start from the units' `digest.md` files. Check original statements and available solution pages when feedback is difficult, uncertain, or disputed. Follow the shared adaptive teaching rules, including labeled teaching examples and prerequisite explanations.
+`course.json` lists the course materials under short source IDs such as `book` or `ps3`. For a source with a nonzero `pageOffset`, add the offset to the printed page number to get the PDF page. The `solutions` field says where to find the source's solutions.
 
-`course.json` lists the course's PDFs under `sources`, each under a short id such as `book` or `ps3`. Each source has its file and a `pageOffset`, where PDF page = the page as the source numbers it + offset. Talk to the learner in the source's own page numbers, and name the source when the course has more than one. Call tools with PDF page numbers. A source's `solutions` says where its own solutions are. The `practice` setting guides exercise load; adapt it to independent work already done and the learner's needs.
-
-Units live in `chapters/`, one folder each. A unit is a book chapter, a lecture, a set of notes, or a problem set, and its `AGENTS.md` lists the pages it covers. A unit without `digest.md` isn't prepared yet. Start a `chapter-reader` subagent with `cwd` set to its folder before you teach it.
+Units live in `chapters/`, one folder each. A unit can be a book chapter, lecture, set of notes, or problem set. Its `AGENTS.md` lists the material it covers.
 
 If `plan.md` exists, it sets the order of sessions and what each one watches, reads, looks up, and practices. Otherwise follow the order of the units. If the course came from MIT OpenCourseWare, `ocw/index.md` lists its PDFs and `ocw/pages/` holds its syllabus, calendar, and reading list.
 
-`progress.md` holds session history, recall results, and what comes next. `sessions/` has one log per session. Cards go to the Anki deck `PILearn::{{TITLE}}`.
+Cards go to the Anki deck `PILearn::{{TITLE}}`.

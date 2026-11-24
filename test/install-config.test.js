@@ -57,7 +57,7 @@ test("fresh settings use Pi's default without overriding user-selected themes", 
 test("course migration changes only known policy wording and is idempotent", () => {
   const next = migrateCourseInstructions(oldCourse);
   assert.match(next, /independent application/);
-  assert.match(next, /available solution pages/);
+  assert.match(next, /Follow the shared teaching and citation rules/);
   assert.match(next, /guides exercise load/);
   assert.match(next, /Source: \/library\/my-edition.pdf. pageOffset: 12./);
   assert.match(next, /Personal note: keep my notation./);
@@ -67,12 +67,13 @@ test("course migration changes only known policy wording and is idempotent", () 
 });
 
 test("legacy single-book course instructions keep their PDF path while gaining source checks", () => {
-  const old = "# Level 2, course: Proofs\nThe source is `/library/proofs.pdf`, and it is the ground truth. Open the source only to check something a digest doesn't cover.\n- `practice`, which sets how many exercises to assign.\n";
+  const old = "# Level 2, course: Proofs\nThe source is `/library/proofs.pdf`, and it is the ground truth. Open the source only to check something a digest doesn't cover.\n- `pageOffset`, where PDF page = printed page + offset. Talk to the learner in printed page numbers and call tools with PDF page numbers.\n- `practice`, which sets how many exercises to assign.\n";
   const next = migrateCourseInstructions(old);
   assert.match(next, /`\/library\/proofs.pdf`/);
-  assert.match(next, /available solutions/);
+  assert.match(next, /PDF page = printed page \+ offset/);
+  assert.match(next, /Follow the shared teaching and citation rules/);
   assert.match(next, /rather than setting a minimum/);
-  assert.doesNotMatch(next, /only to check|ground truth/);
+  assert.doesNotMatch(next, /only to check|ground truth|Talk to the learner/);
 });
 
 test("reinstallation refreshes instructions and retires the theme without touching learner data", { skip: process.platform === "win32" && "uses a POSIX npm stub" }, (t) => {
@@ -95,13 +96,16 @@ test("reinstallation refreshes instructions and retires the theme without touchi
   put(join(agent, "settings.json"), JSON.stringify({ theme: "pilearn", themes: ["themes/pilearn.json", "themes/mine.json"], defaultModel: "keep-model", packages: [] }));
   put(join(agent, "themes/pilearn.json"), "retired");
   put(join(agent, "themes/mine.json"), "keep custom palette");
-  put(join(workspace, "courses/test/AGENTS.md"), oldCourse);
+  const courseFile = join(workspace, "courses/test/AGENTS.md");
+  const courseText = "# Level 2, course: Proofs\n\n`course.json` lists my PDF. Talk to the learner in the source's own page numbers, and name the source when the course has more than one. Call tools with PDF page numbers.\n\n`progress.md` holds session history, recall results, and what comes next. `sessions/` has one log per session. Cards go to the Anki deck `PILearn::Proofs`.\n\nPersonal note: keep my notation.\n";
+  const expectedCourse = "# Level 2, course: Proofs\n\n`course.json` lists my PDF.\n\nCards go to the Anki deck `PILearn::Proofs`.\n\nPersonal note: keep my notation.\n";
+  put(courseFile, courseText);
   const preserved = new Map([
     [join(agent, "auth.json"), '{"fixture":"unchanged"}'],
     [join(agent, "models.json"), '{"providers":{}}'],
     [join(agent, "keybindings.json"), '{"fixture":"unchanged"}'],
     [join(agent, "clipboard.json"), '{"background":"black"}'],
-    [join(workspace, "courses/test/progress.md"), "Existing progress\n"],
+    [join(workspace, "courses/test/progress.md"), "## Next\n- Finish 1.2\n\n## Sessions\n| Date | Sections |\n|---|---|\n| 2026-11-20 | 1.1 |\n"],
     [join(workspace, "courses/test/sessions/old.md"), "Existing session\n"],
     [join(workspace, "courses/test/chapters/ch01/digest.md"), "Existing digest\n"],
     [join(workspace, "courses/test/source.pdf"), "Existing book fixture\n"],
@@ -119,8 +123,9 @@ test("reinstallation refreshes instructions and retires the theme without touchi
   assert.equal(JSON.parse(settings).theme, undefined);
   assert.equal(JSON.parse(settings).defaultModel, "keep-model");
   assert.equal(readFileSync(join(agent, "AGENTS.md"), "utf8"), readFileSync(join(source, "agent/templates/shared-AGENTS.md"), "utf8"));
-  assert.equal(readFileSync(join(workspace, "courses/test/AGENTS.md"), "utf8"), migrateCourseInstructions(oldCourse));
+  assert.equal(readFileSync(courseFile, "utf8"), expectedCourse);
   install();
+  assert.equal(readFileSync(courseFile, "utf8"), expectedCourse);
   assert.equal(readFileSync(join(agent, "settings.json"), "utf8"), settings);
   for (const [path, text] of preserved) assert.equal(readFileSync(path, "utf8"), text, path);
 });

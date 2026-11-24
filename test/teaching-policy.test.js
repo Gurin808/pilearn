@@ -22,7 +22,6 @@ test("always-loaded policy handles unfamiliar ideas and bounds hinting without b
   assert.match(shared, /one or two useful hints/);
   assert.match(shared, /asks for an explanation/);
   assert.match(shared, /what the learner has already said/);
-  assert.match(shared, /not a compulsory checklist/);
   assert.doesNotMatch(shared, /first ask what they already think|before you explain it|never overrides the source/);
 });
 
@@ -39,16 +38,17 @@ test("study and review commands route to the adaptive policy rather than restore
   assert.match(read("agent/skills/eli5/SKILL.md"), /otherwise explain directly/);
 });
 
-test("assessment separates support, task type, and matched comparisons while keeping existing tables", () => {
+test("assessment separates support and task type without requiring matched checks or duplicate records", () => {
   assert.match(tutor, /`independent`, `hinted`, or `modeled`/);
   assert.match(tutor, /recall, explanation, application, and transfer/);
   assert.match(tutor, /compare only matched items/);
   assert.match(tutor, /denominators and support stated/);
   assert.match(tutor, /Preserve the first response/);
-  assert.match(tutor, /Pre-test \(hit\/partial\/miss\)/);
-  assert.match(tutor, /\| Date \| Section \| Item \| Result \|/);
+  assert.match(tutor, /Leave out checks you skipped/);
+  assert.match(tutor, /update only \*Next\*/);
+  assert.match(tutor, /leave them and past session notes unchanged/);
   const progress = read("agent/prompts/progress.md");
-  assert.match(progress, /relevant session logs/);
+  assert.match(progress, /relevant notes in `sessions\/`/);
   assert.match(progress, /older totals cannot support a comparison/);
   assert.match(progress, /Anki is unavailable/);
 });
@@ -56,8 +56,10 @@ test("assessment separates support, task type, and matched comparisons while kee
 test("source checking and card selection retain the intended safeguards", () => {
   assert.match(shared, /teaching additions/);
   assert.match(shared, /not expert answer keys/);
-  assert.match(tutor, /open the available solution pages/);
-  assert.match(tutor, /assumptions, edge cases, and the conclusion/);
+  assert.match(shared, /Check available source solutions before grading difficult work/);
+  assert.match(shared, /assumptions, edge cases, and conclusion/);
+  assert.match(shared, /Cite printed pages for a nonzero offset and cite PDF pages as such for a zero offset/);
+  assert.match(shared, /For text files, cite timestamps if present/);
   assert.match(tutor, /A cold pre-test miss alone is not a reason for a card/);
   assert.match(tutor, /front must stand alone a year later/);
   assert.match(tutor, /not just a proposition or exercise number/);

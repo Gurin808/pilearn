@@ -1,7 +1,7 @@
 ---
 description: Report delayed recall, independent application, and comparable learning checks
 ---
-Report how learning in this course is going. Read `progress.md` and the relevant session logs for item-level evidence, and use `pilearn_anki` stats if available.
+Report how learning in this course is going. Read the relevant notes in `sessions/` for evidence and `progress.md` for review targets and any older history. Use `pilearn_anki` stats if available.
 
 - Compare pre/post results only for matched items with comparable difficulty. Give denominators and help received. Keep extra diagnostic questions separate, and say when older totals cannot support a comparison.
 - Report delayed recall using the time since learning or last instruction. Distinguish independent answers from hinted work and immediate repetitions.

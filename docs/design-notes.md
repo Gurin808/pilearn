@@ -35,8 +35,8 @@ A learning tool on Pi that works from books, papers, and courses. Teach for unde
 └── courses/<course>/          level 2: the tutor for one book
       ├── course.json          source ids, page offsets, practice guide, solutions
       ├── sources/             linked books and imported course files
-      ├── progress.md          sessions, exercises, recall log, next block
-      ├── sessions/            one log per session
+      ├── progress.md          next block, unfinished work, review targets
+      ├── sessions/            one note per sitting with evidence
       └── chapters/<chNN>/     level 3: a chapter-reader writes digest.md here
 ```
 
@@ -57,7 +57,7 @@ A learning tool on Pi that works from books, papers, and courses. Teach for unde
 
 ## Evaluation
 
-When pre/post checks are used, compare matched items with comparable difficulty, stated denominators, and explicit support. Keep extra diagnostic questions separate. Preserve unmatched older totals but don't turn them into gains. Each session log records task type, prompt, result, support as independent, hinted, or modeled, and feedback basis as source pages or tutor reasoning. Delayed recall, independent application, and changed-context transfer supply different evidence. Anki reports card-review statistics. `/progress` reads relevant session logs as well as `progress.md` to distinguish them. None of this establishes causation or superiority over another teacher.
+When pre/post checks are used, compare matched items with comparable difficulty, stated denominators, and explicit support. Keep extra diagnostic questions separate. Preserve unmatched older totals but don't turn them into gains. Each session note records task type, prompt, result, support as independent, hinted, or modeled, and feedback basis as a source citation or tutor reasoning. Delayed recall, independent application, and changed-context transfer supply different evidence. Anki reports card-review statistics. `/progress` reads relevant session logs as well as `progress.md` to distinguish them. None of this establishes causation or superiority over another teacher.
 
 ## Open questions
 
@@ -112,3 +112,4 @@ When pre/post checks are used, compare matched items with comparable difficulty,
 - **2026-11-17 · Adaptive teaching and theme retirement.** The author approved a review comparing active PILearn and Feynman sessions. Replaced universal attempt-first rules and the compulsory eight-step script with decisions based on missing prerequisites, retrieval, and independent reasoning. Added direct clarification, bounded hinting, labeled teaching additions, source-solution checks, and independent application. Assessment separates correctness from help, compares only matched pre/post items, and uses the latest independent evidence for review selection. Cards target weaknesses after teaching or later retrieval, not cold misses alone. Prompts, ELI5, templates, README, and the current principles above now agree. Earlier log entries remain historical, including claims about enforced step order and caps that were inaccurate. PILearn has no lesson-state controller and generated digests are not expert answer keys. The custom theme is retired in favor of Pi's default; installer migrations preserve other preferences and course-specific instructions. These changes are design judgments informed by the cited literature, not demonstrated learning improvements.
 - 2026-11-17. Startup wordmark. Replaced the all-caps banner with Pi's enlarged pixel mark and lowercase `learn`, following Feynman's lettering style. The lowercase bodies align with the yellow i. Pi's brand colors stay fixed while `learn` follows the terminal foreground. The banner falls back to a compact wordmark below 76 columns, without restoring a custom theme. Tests cover shape, colors, alignment, color modes, and header resizing.
 - 2026-11-20. History in lessons. The tutor now tells a brief, sourced story when the problem or experiment helps explain why an idea was needed. Start with course material, check missing details with `pilearn_wiki`, and return to the concept. `/history` still gives a fuller account. This is a learner preference, not a claim about measured retention.
+- 2026-11-24. Shorter closeout. Save new assessment evidence in one note per sitting and update only *Next* in `progress.md`. Keep old tables for reference. The startup tree shows digest availability and no longer guesses completion from free text. The shared instructions own teaching and citation rules. Cite PDFs by the numbering configured for the source and cite transcripts by timestamp.

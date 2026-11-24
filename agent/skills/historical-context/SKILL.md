@@ -9,7 +9,7 @@ Give the learner a story they can remember and retell. Start with what people co
 
 ## Check the story
 
-Start with historical material in the course sources and cite its printed pages. If the course skips the history or leaves a claim uncertain, use `pilearn_wiki`. It can find an article's history section and check key people or collaborations through Wikidata. Cite the URLs it returns after `Source:`. Keep course sources authoritative for definitions, derivations, and exercises. If accounts disagree, say so. Leave unverified anecdotes, quotes, and priority claims out of the story.
+Start with historical material in the course sources and cite it using the shared citation rules. If the course skips the history or leaves a claim uncertain, use `pilearn_wiki`. It can find an article's history section and check key people or collaborations through Wikidata. Cite the URLs it returns after `Source:`. Keep course sources authoritative for definitions, derivations, and exercises. If accounts disagree, say so. Leave unverified anecdotes, quotes, and priority claims out of the story.
 
 ## Choose the length
 

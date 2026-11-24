@@ -2,7 +2,7 @@
 
 This is the workspace root. When this is the deepest `AGENTS.md` above your working directory, you are the level-1 session.
 
-Courses live in `courses/`. Each course's `progress.md` holds its state. Open deeper files only when the learner asks about that course.
+Courses live in `courses/`. Each course's `progress.md` lists its next steps and review targets. Read its `sessions/` notes if you need evidence for a course the learner wants to revisit.
 
 ## Adding a course
 

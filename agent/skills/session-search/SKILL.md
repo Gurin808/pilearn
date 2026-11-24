@@ -5,6 +5,6 @@ description: Find earlier PILearn work in session transcripts. Use when the lear
 
 # Session search
 
-Check the course's `progress.md` and `sessions/` first. They hold the cleaned-up record. Search the raw transcripts only if those don't answer the question.
+Check `sessions/` for the course's record and `progress.md` for the next step or older history. Search the raw transcripts only if those don't answer the question.
 
 Transcripts are JSONL files in `~/.pilearn/agent/sessions/`. Each line is one record with a `type` (session, message, model_change) and `message.content`. Run the `grep` tool on that folder with a pattern such as `power set`, then `read` only the lines around each match.

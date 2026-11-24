@@ -202,7 +202,7 @@ pilearn                    # starts at level 1 (~/study)
 
 Inside a course, at level 2:
 
-- `/study [chapter or sections]` runs an adaptive session with reading or guided explanation, useful checks, and independent practice. It skips redundant activities and logs the evidence and next step.
+- `/study [chapter or sections]` runs an adaptive session with reading or guided explanation, useful checks, and independent practice. When you wrap up or pause with the tutor, it saves a short note in `sessions/` and updates *Next* in `progress.md`. Older records stay as written.
 - `/review` checks studied material through delayed recall and independent application.
 - `/progress` reports matched learning checks where available, delayed recall, independent use, and Anki statistics without treating them as interchangeable.
 - `/history [topic]` gives a fuller account of the problem or experiment behind an idea. It starts with the course sources and uses Wikipedia and Wikidata as needed.
@@ -254,7 +254,7 @@ Pi still handles clipboard paste and image reading. PILearn's small `pilearn-cli
 
 Each level has an `AGENTS.md` that tells the model its role. Tutors start from summaries and can reopen original material and solutions for checking.
 
-PILearn stays inside your study folder. It teaches from course materials and can add prerequisite explanations, analogies, and examples from its own knowledge. Source claims cite printed pages; teaching additions and unverified reasoning aren't passed off as source content. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
+PILearn stays inside your study folder. It teaches from course materials and can add prerequisite explanations, analogies, and examples from its own knowledge. Citations follow the course's numbering for each PDF source and use timestamps for timestamped transcripts. Teaching additions and unverified reasoning aren't passed off as source content. It has no shell tool, and a guard, `pilearn-guard`, checks every file access before it runs.
 
 - Writing is allowed only inside the workspace, `~/study`.
 - Reading is allowed in the workspace, in each course's linked books, which live elsewhere, in PILearn's config except the files that hold credentials, and in the system temporary directory for screenshots and pasted clipboard images.

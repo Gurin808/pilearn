@@ -71,7 +71,7 @@ const Params = Type.Object({
   pageOffset: Type.Optional(
     Type.Integer({
       description:
-        "Level source: PDF page = page as the source numbers it + pageOffset. Find it by locating one printed page, such as a chapter start, in the PDF. Use 0 when the PDF has no printed page numbers.",
+        "Level source: PDF page = page as the source numbers it + pageOffset. Find it by locating one printed page, such as a chapter start, in the PDF. Use 0 for PDF numbering.",
     }),
   ),
   solutions: Type.Optional(
@@ -245,10 +245,7 @@ export default function (pi: ExtensionAPI) {
         await saveCourse(courseDir, course);
         const made = ["course.json", "chapters/", "sessions/"];
         if (await createIfMissing(join(courseDir, "AGENTS.md"), await fill("level2-AGENTS.md", { TITLE: params.title }))) made.push("AGENTS.md");
-        const progress =
-          `# ${params.title} progress\n\n## Next\n- (first unit)\n\n## Sessions\n| Date | Sections | Pre-test (hit/partial/miss) | Post-test (hit/partial/miss) | Warm-up (hit/partial/miss) | Cards |\n|---|---|---|---|---|---|\n\n` +
-          `## Exercises\n| Assigned | Sections | Exercises | Why | How it went |\n|---|---|---|---|---|\n\n## Recall log\n| Date | Section | Item | Result |\n|---|---|---|---|\n`;
-        if (await createIfMissing(join(courseDir, "progress.md"), progress)) made.push("progress.md");
+        if (await createIfMissing(join(courseDir, "progress.md"), `# ${params.title} progress\n\n## Next\n- (first unit)\n`)) made.push("progress.md");
         return result(
           `Course ${params.course} at ${courseDir}. Created: ${made.join(", ")}. Next: add a book with level "source", or an OCW download with level "ocw".`,
         );
@@ -295,7 +292,7 @@ export default function (pi: ExtensionAPI) {
         if (params.solutions) entry.solutions = params.solutions;
         const updated: Course = { ...existing, sources: { ...existing.sources, [id]: entry } };
         await saveCourse(courseDir, updated);
-        const next = !entry.text && entry.pageOffset === undefined ? " Next: set pageOffset (0 if the PDF has no printed page numbers)." : "";
+        const next = !entry.text && entry.pageOffset === undefined ? " Next: set pageOffset (0 for PDF numbering)." : "";
         return result(`${current ? "Updated" : "Added"} source ${describeSource(id, entry)}.${note}${next}`);
       }
 
@@ -449,7 +446,7 @@ export default function (pi: ExtensionAPI) {
         }
         if (!part.pages) throw new Error(`Part ${part.source} needs \`pages\`: it's a PDF.`);
         if (source.pageOffset === undefined)
-          throw new Error(`Source ${part.source} has no pageOffset yet: set it with level "source" (0 if its PDF has no printed page numbers).`);
+          throw new Error(`Source ${part.source} has no pageOffset yet: set it with level "source" (0 for PDF numbering).`);
         const m = part.pages.trim().match(PAGES);
         if (!m) throw new Error(`Pages "${part.pages}" should be a range like 41-67.`);
         const [first, last] = [Number(m[1]), Number(m[2] ?? m[1])];
@@ -469,12 +466,12 @@ export default function (pi: ExtensionAPI) {
       const kind = (p: { source: string }) => existing.sources[p.source]!;
       const pdfOnly = cited.some((p) => !kind(p).text && kind(p).pageOffset === 0);
       const printed = cited.some((p) => !kind(p).text && kind(p).pageOffset !== 0);
-      const transcript = cited.some((p) => kind(p).text);
+      const text = cited.some((p) => kind(p).text);
       const cite = [
-        several ? "This unit uses more than one source, so cite pages with the source id, like `book p. 45` or `ps3 p. 2`." : "",
+        several ? "This unit has multiple sources. Include the source ID in each citation, like `book p. 45` or `ps3 PDF p. 2`." : "",
         pdfOnly ? "Cite a range given only in PDF pages by its PDF pages, even where a page prints its own number." : "",
         printed ? "Cite a range given in the source's own pages by those pages." : "",
-        transcript ? "Cite a transcript by its timestamps, like `[12:40]`." : "",
+        text ? "Cite transcripts by their timestamps, like `[12:40]`, and other text files by their headings when available." : "",
       ]
         .filter(Boolean)
         .join(" ");
